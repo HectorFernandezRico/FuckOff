@@ -1,0 +1,79 @@
+# version: '3.8'  # Versión de Docker Compose; usa 3.8 para compatibilidad con funciones modernas.
+
+services:
+  # Servicio de base de datos: MySQL para almacenar datos de Laravel.
+  db:
+    image: mysql:8.0  # Imagen oficial de MySQL versión 8.0.
+    container_name: tienda_db  # Nombre del contenedor para fácil identificación.
+    restart: unless-stopped  # Reinicia el contenedor automáticamente si se detiene, excepto si se para manualmente.
+    environment:  # Variables de entorno para configurar la base de datos.
+      MYSQL_ROOT_PASSWORD: rootpassword  # Contraseña del usuario root.
+      MYSQL_DATABASE: tienda_db  # Nombre de la base de datos que se crea automáticamente.
+      MYSQL_USER: tienda_user  # Usuario adicional para la app.
+      MYSQL_PASSWORD: tienda_pass  # Contraseña del usuario adicional.
+    ports:  # Mapea el puerto del host al contenedor para acceder desde fuera.
+      - "3306:3306"  # Puerto 3306 del host conecta al 3306 del contenedor.
+    volumes:  # Volúmenes para persistir datos.
+      - db_data:/var/lib/mysql  # Almacena los datos de la DB en un volumen nombrado.
+
+  # Servicio del backend: Laravel con servidor de desarrollo para hot reload.
+  backend:
+    build:  # Construye la imagen usando el Dockerfile en la carpeta backend.
+      context: ./backend  # Ruta al contexto de construcción (carpeta backend).
+      dockerfile: Dockerfile  # Archivo Dockerfile a usar.
+    container_name: tienda_backend  # Nombre del contenedor.
+    restart: unless-stopped  # Reinicio automático.
+    ports:  # Exposición de puertos.
+      - "8000:8000"  # Puerto 8000 del host conecta al 8000 del contenedor (para artisan serve).
+    volumes:  # Volúmenes para desarrollo: cambios en código se reflejan en tiempo real.
+      - ./backend:/var/www/html  # Monta la carpeta local backend en el contenedor.
+    depends_on:  # Espera a que este servicio esté listo antes de iniciar.
+      - db  # Depende de la base de datos.
+    environment:  # Variables de entorno para Laravel.
+      - APP_ENV=local  # Entorno de desarrollo.
+      - DB_CONNECTION=mysql  # Tipo de conexión a DB.
+      - DB_HOST=db  # Host de la DB (nombre del servicio en compose).
+      - DB_PORT=3306  # Puerto de la DB.
+      - DB_DATABASE=tienda_db  # Nombre de la DB.
+      - DB_USERNAME=tienda_user  # Usuario de la DB.
+      - DB_PASSWORD=tienda_pass  # Contraseña de la DB.
+    command: php artisan serve --host=0.0.0.0 --port=8000  # Comando para iniciar el servidor de Laravel con hot reload (recarga automática al cambiar archivos).
+
+  # Servicio del frontend: Servidor con Node.js y live-server para hot reload en archivos estáticos.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tienda_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=1    # importante en Windows para detectar cambios
+    command: ["live-server","--host=0.0.0.0","--port=8080","--watch=.","--no-browser"]
+
+
+  # Servicio opcional para ejecutar comandos de Laravel (Composer, Artisan) sin hot reload.
+  artisan:
+    build:  # Construye la imagen usando el mismo Dockerfile del backend.
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tienda_artisan  # Nombre del contenedor.
+    volumes:  # Volúmenes para acceder al código.
+      - ./backend:/var/www/html
+    depends_on:  # Depende de la DB.
+      - db
+    command: tail -f /dev/null  # Mantiene el contenedor corriendo para ejecutar comandos manuales (no hace nada, solo espera).
+    environment:  # Variables de entorno para Laravel.
+      - APP_ENV=local
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=tienda_db
+      - DB_USERNAME=tienda_user
+      - DB_PASSWORD=tienda_pass
+
+volumes:  # Definición de volúmenes nombrados para persistencia.
+  db_data:  # Volumen para los datos de la base de datos.
