@@ -32,14 +32,16 @@ services:
     environment:  # Variables de entorno para Laravel.
       - APP_ENV=local  # Entorno de desarrollo.
       - DB_CONNECTION=mysql  # Tipo de conexión a DB.
-      - DB_HOST=db  # Host de la DB (nombre del servicio en compose).
-      - DB_PORT=3306  # Puerto de la DB.
-      - DB_DATABASE=tienda_db  # Nombre de la DB.
-      - DB_USERNAME=tienda_user  # Usuario de la DB.
-      - DB_PASSWORD=tienda_pass  # Contraseña de la DB.
+      - DB_HOST=127.0.0.1  # Host de la DB (nombre del servicio en compose).
+      - DB_PORT=8000  # Puerto de la DB.
+      - DB_DATABASE=fuckoff_db  # Nombre de la DB.
+      - DB_USERNAME=root  # Usuario de la DB.
+      - DB_PASSWORD=  # Contraseña de la DB.
     command: php artisan serve --host=0.0.0.0 --port=8000  # Comando para iniciar el servidor de Laravel con hot reload (recarga automática al cambiar archivos).
 
   # Servicio del frontend: Servidor con Node.js y live-server para hot reload en archivos estáticos.
+  # ...existing code...
+# ...existing code...
   frontend:
     build:
       context: ./frontend
@@ -52,8 +54,8 @@ services:
       - ./frontend:/app
     environment:
       - CHOKIDAR_USEPOLLING=1    # importante en Windows para detectar cambios
-    command: ["live-server","--host=0.0.0.0","--port=8080","--watch=.","--no-browser"]
-
+    command: ["live-server", "/app/HTML", "--host=0.0.0.0", "--port=8080", "--watch=.", "--no-browser"]
+# ...existing code...
 
   # Servicio opcional para ejecutar comandos de Laravel (Composer, Artisan) sin hot reload.
   artisan:
@@ -69,11 +71,11 @@ services:
     environment:  # Variables de entorno para Laravel.
       - APP_ENV=local
       - DB_CONNECTION=mysql
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=tienda_db
-      - DB_USERNAME=tienda_user
-      - DB_PASSWORD=tienda_pass
+      - DB_HOST=127.0.0.1
+      - DB_PORT=8000
+      - DB_DATABASE=fuckoff_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=
 
 volumes:  # Definición de volúmenes nombrados para persistencia.
   db_data:  # Volumen para los datos de la base de datos.
