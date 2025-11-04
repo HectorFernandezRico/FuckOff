@@ -31,6 +31,11 @@ RUN { \
     echo "opcache.validate_timestamps=1"; \
     echo "opcache.revalidate_freq=0"; \
     echo "opcache.max_accelerated_files=10000"; \
+    echo "opcache.memory_consumption=128"; \
+    echo "opcache.interned_strings_buffer=16"; \
+    echo "opcache.fast_shutdown=1"; \
+    echo "realpath_cache_size=4096K"; \
+    echo "realpath_cache_ttl=600"; \
 } > /usr/local/etc/php/conf.d/docker-dev.ini
 
 # Copia entrypoint y asegura LF + permisos ejecutables (evita exec format error)

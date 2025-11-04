@@ -12,7 +12,7 @@ services:
       MYSQL_USER: tienda_user  # Usuario adicional para la app.
       MYSQL_PASSWORD: tienda_pass  # Contraseña del usuario adicional.
     ports:  # Mapea el puerto del host al contenedor para acceder desde fuera.
-      - "3306:3306"  # Puerto 3306 del host conecta al 3306 del contenedor.
+      - "3307:3306"  # Puerto 3307 del host conecta al 3306 del contenedor (cambiado para evitar conflictos).
     volumes:  # Volúmenes para persistir datos.
       - db_data:/var/lib/mysql  # Almacena los datos de la DB en un volumen nombrado.
 
@@ -32,11 +32,11 @@ services:
     environment:  # Variables de entorno para Laravel.
       - APP_ENV=local  # Entorno de desarrollo.
       - DB_CONNECTION=mysql  # Tipo de conexión a DB.
-      - DB_HOST=127.0.0.1  # Host de la DB (nombre del servicio en compose).
-      - DB_PORT=8000  # Puerto de la DB.
-      - DB_DATABASE=fuckoff_db  # Nombre de la DB.
-      - DB_USERNAME=root  # Usuario de la DB.
-      - DB_PASSWORD=  # Contraseña de la DB.
+      - DB_HOST=db  # Host de la DB (nombre del servicio en compose).
+      - DB_PORT=3306  # Puerto de la DB.
+      - DB_DATABASE=tienda_db  # Nombre de la DB.
+      - DB_USERNAME=tienda_user  # Usuario de la DB.
+      - DB_PASSWORD=tienda_pass  # Contraseña de la DB.
     command: php artisan serve --host=0.0.0.0 --port=8000  # Comando para iniciar el servidor de Laravel con hot reload (recarga automática al cambiar archivos).
 
   # Servicio del frontend: Servidor con Node.js y live-server para hot reload en archivos estáticos.
@@ -54,7 +54,7 @@ services:
       - ./frontend:/app
     environment:
       - CHOKIDAR_USEPOLLING=1    # importante en Windows para detectar cambios
-    command: ["live-server", "/app/HTML", "--host=0.0.0.0", "--port=8080", "--watch=.", "--no-browser"]
+    command: ["live-server", "/app", "--host=0.0.0.0", "--port=8080", "--watch=.", "--no-browser", "--entry-file=HTML/index.html"]
 # ...existing code...
 
   # Servicio opcional para ejecutar comandos de Laravel (Composer, Artisan) sin hot reload.
@@ -71,11 +71,11 @@ services:
     environment:  # Variables de entorno para Laravel.
       - APP_ENV=local
       - DB_CONNECTION=mysql
-      - DB_HOST=127.0.0.1
-      - DB_PORT=8000
-      - DB_DATABASE=fuckoff_db
-      - DB_USERNAME=root
-      - DB_PASSWORD=
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=tienda_db
+      - DB_USERNAME=tienda_user
+      - DB_PASSWORD=tienda_pass
 
 volumes:  # Definición de volúmenes nombrados para persistencia.
   db_data:  # Volumen para los datos de la base de datos.

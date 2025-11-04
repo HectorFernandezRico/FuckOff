@@ -18,8 +18,9 @@ class ProductController extends Controller
     }
 
     // Mostrar un producto
-    public function show(Product $product)
+    public function show($id)
     {
+        $product = Product::findOrFail($id);
         return response()->json(['data' => $product], Response::HTTP_OK);
     }
 
@@ -40,8 +41,10 @@ class ProductController extends Controller
     }
 
     // Actualizar producto
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $id)
     {
+        $product = Product::findOrFail($id);
+
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             // 'price' => 'sometimes|required|numeric',
@@ -54,8 +57,9 @@ class ProductController extends Controller
     }
 
     // Eliminar producto
-    public function destroy(Product $product)
+    public function destroy($id)
     {
+        $product = Product::findOrFail($id);
         $product->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

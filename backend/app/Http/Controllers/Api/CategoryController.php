@@ -19,10 +19,11 @@ class CategoryController extends Controller
         return response()->json(['data' => $categories], Response::HTTP_OK);
     }
 
-    // Mostrar una categoría concreta (route-model binding)
-    public function show(Category $category)
+    // Mostrar una categoría concreta
+    public function show($id)
     {
         // Devuelve la categoría encontrada
+        $category = Category::findOrFail($id);
         return response()->json(['data' => $category], Response::HTTP_OK);
     }
 
@@ -32,7 +33,7 @@ class CategoryController extends Controller
         // Validación básica — ajusta reglas a tus campos reales
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            // 'description' => 'nullable|string',
+            'slug' => 'required|string|max:255|unique:categories,slug',
         ]);
 
         // Crear la categoría (asegúrate que $fillable en el modelo permite estos campos)
@@ -43,12 +44,15 @@ class CategoryController extends Controller
     }
 
     // Actualizar una categoría
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
+        // Buscar la categoría
+        $category = Category::findOrFail($id);
+
         // Validación básica — ajustar según esquema real
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            // 'description' => 'nullable|string',
+            'slug' => 'sometimes|required|string|max:255|unique:categories,slug,' . $id,
         ]);
 
         // Actualiza los campos permitidos
@@ -59,8 +63,11 @@ class CategoryController extends Controller
     }
 
     // Eliminar una categoría
-    public function destroy(Category $category)
+    public function destroy($id)
     {
+        // Buscar la categoría
+        $category = Category::findOrFail($id);
+
         // Borrar registro (si tienes relaciones, revisa CASCADE o impedir borrado)
         $category->delete();
 

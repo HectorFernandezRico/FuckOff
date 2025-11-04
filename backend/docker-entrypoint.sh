@@ -11,8 +11,9 @@ fi
 
 # Arrancar artisan serve si está habilitado (DEV)
 if [ "${ARTISAN_SERVE}" = "1" ]; then
-  echo "Starting artisan serve on 0.0.0.0:${ARTISAN_PORT}"
-  exec php artisan serve --host=0.0.0.0 --port="${ARTISAN_PORT}"
+  echo "Starting PHP built-in server with multiple workers on 0.0.0.0:${ARTISAN_PORT}"
+  export PHP_CLI_SERVER_WORKERS=10
+  exec php -S 0.0.0.0:${ARTISAN_PORT} -t public
 fi
 
 # Por defecto ejecutar el comando CMD (php-fpm)

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - FVCKOFF</title>
+    <link rel="stylesheet" href="/CSS/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Admin -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/HTML/admin.html" class="logo">FVCKOFF ADMIN</a>
+                <div class="header-actions">
+                    <a href="/HTML/index.html" class="btn-auth">Ver Tienda</a>
+                    <button class="btn-auth" id="logoutAdminBtn">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Dashboard -->
+    <section class="admin-dashboard">
+        <div class="container">
+            <!-- Admin Tabs -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="categories">Categorías</button>
+                <button class="admin-tab" data-tab="products">Productos</button>
+                <button class="admin-tab" data-tab="users">Usuarios</button>
+                <button class="admin-tab" data-tab="orders">Órdenes</button>
+            </div>
+
+            <!-- Categories Tab -->
+            <div class="admin-tab-content active" id="categories-tab">
+                <div class="admin-header">
+                    <h2 class="admin-title">Gestión de Categorías</h2>
+                    <button class="btn-primary" id="addCategoryBtn">+ Nueva Categoría</button>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Slug</th>
+                                <th>Productos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <tr>
+                                <td colspan="5" class="loading-cell">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div class="admin-tab-content" id="products-tab">
+                <div class="admin-header">
+                    <h2 class="admin-title">Gestión de Productos</h2>
+                    <button class="btn-primary" id="addProductBtn">+ Nuevo Producto</button>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Talla</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <tr>
+                                <td colspan="8" class="loading-cell">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="admin-tab-content" id="users-tab">
+                <div class="admin-header">
+                    <h2 class="admin-title">Gestión de Usuarios</h2>
+                    <button class="btn-primary" id="addUserBtn">+ Nuevo Usuario</button>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Fecha Registro</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="6" class="loading-cell">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div class="admin-tab-content" id="orders-tab">
+                <div class="admin-header">
+                    <h2 class="admin-title">Gestión de Órdenes</h2>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr>
+                                <td colspan="6" class="loading-cell">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal for CRUD Operations -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content admin-modal-content">
+            <button class="btn-close modal-close" id="closeAdminModal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="modal-body" id="adminModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="adminOverlay"></div>
+
+    <script src="/JS/admin.js"></script>
+</body>
+</html>

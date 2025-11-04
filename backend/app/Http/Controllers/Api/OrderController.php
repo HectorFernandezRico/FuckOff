@@ -20,9 +20,10 @@ class OrderController extends Controller
     }
 
     // Mostrar una orden
-    public function show(Order $order)
+    public function show($id)
     {
         // Devolver la orden (puedes cargar items si lo deseas)
+        $order = Order::findOrFail($id);
         return response()->json(['data' => $order], Response::HTTP_OK);
     }
 
@@ -87,8 +88,10 @@ class OrderController extends Controller
     }
 
     // Actualizar orden (por ejemplo, cambiar estado)
-    public function update(Request $request, Order $order)
+    public function update(Request $request, $id)
     {
+        $order = Order::findOrFail($id);
+
         // Validación simple — ajusta según tu esquema
         $data = $request->validate([
             // 'status' => 'sometimes|required|string',
@@ -99,8 +102,10 @@ class OrderController extends Controller
     }
 
     // Borrar orden
-    public function destroy(Order $order)
+    public function destroy($id)
     {
+        $order = Order::findOrFail($id);
+
         // Si quieres borrar también order_items, asegúrate de que tu DB tenga ON DELETE CASCADE o hazlo manualmente
         $order->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);

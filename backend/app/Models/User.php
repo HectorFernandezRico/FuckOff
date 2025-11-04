@@ -2,15 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Model
+class User extends Authenticatable
 {
+    use HasFactory, Notifiable, HasApiTokens;
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    protected $casts = [
+        'password' => 'hashed',
     ];
 
     // Constantes para roles
@@ -22,9 +35,8 @@ class User extends Model
         return $this->role === self::ROLE_ADMIN;
     }
 
-     public function orders()
+    public function orders()
     {
         return $this->hasMany(Order::class);
     }
-
 }
