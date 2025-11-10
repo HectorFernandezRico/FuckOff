@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
@@ -28,6 +29,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('me', [AuthController::class, 'me']);
 
+    // Cart routes (available for all authenticated users)
+    Route::get('cart', [CartController::class, 'index']);
+    Route::post('cart', [CartController::class, 'store']);
+    Route::put('cart/{productId}', [CartController::class, 'update']);
+    Route::delete('cart/{productId}', [CartController::class, 'destroy']);
+    Route::delete('cart', [CartController::class, 'clear']);
+    Route::post('cart/sync', [CartController::class, 'sync']);
+
     // Order routes (available for all authenticated users)
     Route::apiResource('order', OrderController::class);
 });
@@ -47,3 +56,14 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // User management
     Route::apiResource('user', UserController::class);
 });
+
+// Serve images from storage (public route)
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+
+    return response()->file($filePath);
+})->where('path', '.*');

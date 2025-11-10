@@ -107,9 +107,23 @@
 
                         <div class="summary-divider"></div>
 
-                        <div class="summary-row">
-                            <span>Subtotal</span>
-                            <span id="summarySubtotal">0.00€</span>
+                        <div class="summary-section">
+                            <div class="summary-section-title">Desglose de productos:</div>
+
+                            <div class="summary-row" style="padding-left: 1rem; font-size: 0.9em;">
+                                <span>Base imponible</span>
+                                <span id="summarySubtotal">0.00€</span>
+                            </div>
+
+                            <div class="summary-row" style="padding-left: 1rem; font-size: 0.9em;">
+                                <span>+ IVA (21%)</span>
+                                <span id="summaryTax">0.00€</span>
+                            </div>
+
+                            <div class="summary-row" style="font-weight: 600; background: rgba(255,255,255,0.05); padding: 0.75rem 1rem; margin: 0.5rem 0; border-radius: 8px;">
+                                <span>= Subtotal productos</span>
+                                <span id="summaryProductsTotal">0.00€</span>
+                            </div>
                         </div>
 
                         <div class="summary-row">
@@ -128,7 +142,7 @@
                             Completar Pedido
                         </button>
 
-                        <a href="/HTML/index.html" class="btn-link">Volver a la tienda</a>
+                        <a href="javascript:history.back()" class="btn-secondary btn-full" style="margin-top: 1rem; display: block; text-align: center;">Volver</a>
                     </div>
                 </div>
             </div>

@@ -8,6 +8,8 @@ const loginFormElement = document.getElementById('loginFormElement');
 const registerFormElement = document.getElementById('registerFormElement');
 const showRegisterBtn = document.getElementById('showRegister');
 const showLoginBtn = document.getElementById('showLogin');
+const loginExternalActions = document.querySelector('.auth-external-actions:not(#registerExternalActions)');
+const registerExternalActions = document.getElementById('registerExternalActions');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -45,12 +47,16 @@ function initEventListeners() {
 
 function showRegisterForm() {
     loginForm.classList.add('hidden');
+    loginExternalActions.classList.add('hidden');
     registerForm.classList.remove('hidden');
+    registerExternalActions.classList.remove('hidden');
 }
 
 function showLoginForm() {
     registerForm.classList.add('hidden');
+    registerExternalActions.classList.add('hidden');
     loginForm.classList.remove('hidden');
+    loginExternalActions.classList.remove('hidden');
 }
 
 async function handleLogin(e) {
@@ -86,6 +92,9 @@ async function handleLogin(e) {
         // Save token and user data
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Sincronizar carrito después del login
+        await syncCartAfterLogin(data.token);
 
         // Redirect based on role
         const returnUrl = new URLSearchParams(window.location.search).get('return');
@@ -191,5 +200,54 @@ async function handleRegister(e) {
     } finally {
         btnText.classList.remove('hidden');
         btnLoader.classList.add('hidden');
+    }
+}
+
+
+// Cart Synchronization
+async function syncCartAfterLogin(token) {
+    const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+    if (localCart.length === 0) {
+        // No hay nada en localStorage, cargar del backend
+        try {
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('cart', JSON.stringify(data.data || []));
+            }
+        } catch (error) {
+            console.error('Error loading cart from backend:', error);
+        }
+        return;
+    }
+
+    // Hay items en localStorage, sincronizar con backend
+    try {
+        const response = await fetch(`${API_BASE_URL}/cart/sync`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                items: localCart
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('cart', JSON.stringify(data.data || []));
+            console.log('Cart synced successfully');
+        }
+    } catch (error) {
+        console.error('Error syncing cart:', error);
     }
 }

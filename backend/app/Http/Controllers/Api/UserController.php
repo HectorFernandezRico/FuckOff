@@ -32,10 +32,16 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
+            'role' => 'sometimes|required|string|in:user,admin',
         ]);
 
         // Encriptar contraseña
         $data['password'] = Hash::make($data['password']);
+
+        // Si no se especifica rol, usar 'user' por defecto
+        if (!isset($data['role'])) {
+            $data['role'] = 'user';
+        }
 
         $user = User::create($data);
 
@@ -51,8 +57,10 @@ class UserController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
             'password' => 'sometimes|nullable|string|min:6',
+            'role' => 'sometimes|required|string|in:user,admin',
         ]);
 
+        // Solo hashear si se envió contraseña
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {

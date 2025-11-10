@@ -27,13 +27,30 @@ class ProductController extends Controller
     // Crear producto
     public function store(Request $request)
     {
-        // Validación básica: adapta los campos reales (precio, stock, category_id, etc.)
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            // 'description' => 'nullable|string',
-            // 'price' => 'required|numeric',
-            // 'category_id' => 'nullable|exists:categories,id',
+            'slug' => 'required|string|max:255|unique:products,slug',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'size' => 'required|string|max:10',
+            'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'active' => 'nullable|boolean',
         ]);
+
+        // Manejar imagen si se subió
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('products', $filename, 'public');
+            $data['path'] = '/storage/' . $path;
+        } else {
+            $data['path'] = '/images/products/default.jpg';
+        }
+
+        // Asegurar que active sea booleano
+        $data['active'] = isset($data['active']) ? (bool)$data['active'] : true;
 
         $product = Product::create($data);
 
@@ -47,9 +64,35 @@ class ProductController extends Controller
 
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            // 'price' => 'sometimes|required|numeric',
-            // 'stock' => 'sometimes|integer',
+            'slug' => 'sometimes|required|string|max:255|unique:products,slug,' . $id,
+            'description' => 'nullable|string',
+            'price' => 'sometimes|required|numeric|min:0',
+            'stock' => 'sometimes|required|integer|min:0',
+            'size' => 'sometimes|required|string|max:10',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'active' => 'nullable|boolean',
         ]);
+
+        // Manejar imagen si se subió una nueva
+        if ($request->hasFile('image')) {
+            // Eliminar imagen anterior si existe y no es la default
+            if ($product->path && $product->path !== '/images/products/default.jpg') {
+                $oldImagePath = str_replace('/storage/', '', $product->path);
+                \Storage::disk('public')->delete($oldImagePath);
+            }
+
+            // Guardar nueva imagen
+            $image = $request->file('image');
+            $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('products', $filename, 'public');
+            $data['path'] = '/storage/' . $path;
+        }
+
+        // Asegurar que active sea booleano si está presente
+        if (isset($data['active'])) {
+            $data['active'] = (bool)$data['active'];
+        }
 
         $product->update($data);
 
@@ -60,6 +103,13 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
+
+        // Eliminar imagen si existe y no es la default
+        if ($product->path && $product->path !== '/images/products/default.jpg') {
+            $imagePath = str_replace('/storage/', '', $product->path);
+            \Storage::disk('public')->delete($imagePath);
+        }
+
         $product->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

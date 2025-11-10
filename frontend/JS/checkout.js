@@ -4,10 +4,13 @@ const API_BASE_URL = 'http://localhost:8000/api';
 // State
 let cart = [];
 const SHIPPING_COST = 5.00;
+const TAX_RATE = 0.21; // IVA 21%
 
 // DOM Elements
 const summaryItems = document.getElementById('summaryItems');
 const summarySubtotal = document.getElementById('summarySubtotal');
+const summaryTax = document.getElementById('summaryTax');
+const summaryProductsTotal = document.getElementById('summaryProductsTotal');
 const summaryShipping = document.getElementById('summaryShipping');
 const summaryTotal = document.getElementById('summaryTotal');
 const completeOrderBtn = document.getElementById('completeOrderBtn');
@@ -51,11 +54,20 @@ function loadCheckoutData() {
         </div>
     `).join('');
 
-    // Calculate totals
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const total = subtotal + SHIPPING_COST;
+    // Calculate totals (precio YA incluye IVA)
+    const totalWithTax = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Extraer IVA del precio (precio ya incluye IVA)
+    // Fórmula: base = total / 1.21, IVA = total - base
+    const subtotal = totalWithTax / (1 + TAX_RATE);
+    const tax = totalWithTax - subtotal;
+
+    // Total final = productos (con IVA incluido) + envío
+    const total = totalWithTax + SHIPPING_COST;
 
     summarySubtotal.textContent = `${subtotal.toFixed(2)}€`;
+    summaryTax.textContent = `${tax.toFixed(2)}€`;
+    summaryProductsTotal.textContent = `${totalWithTax.toFixed(2)}€`;
     summaryShipping.textContent = `${SHIPPING_COST.toFixed(2)}€`;
     summaryTotal.textContent = `${total.toFixed(2)}€`;
 }

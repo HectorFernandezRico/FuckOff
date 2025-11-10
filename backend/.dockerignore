@@ -1,0 +1,47 @@
+# Ignorar archivos/directorios que no deben copiarse al contenedor Docker
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Vendor (se instala durante el build)
+vendor/
+
+# Variables de entorno
+.env
+.env.backup
+.env.production
+
+# Storage y cache
+storage/*.key
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*
+
+# Symlinks (se crean en runtime)
+public/storage
+
+# Testing
+.phpunit.result.cache
+tests/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+
+# Documentación
+*.md
+README.md

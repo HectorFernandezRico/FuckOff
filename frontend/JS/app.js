@@ -20,7 +20,7 @@ const cartItems = document.getElementById('cartItems');
 const cartCount = document.getElementById('cartCount');
 const totalPrice = document.getElementById('totalPrice');
 const sortSelect = document.getElementById('sortSelect');
-const navLinks = document.querySelectorAll('.nav-link');
+const categoryNav = document.getElementById('categoryNav');
 const productModal = document.getElementById('productModal');
 const closeModal = document.getElementById('closeModal');
 const modalBody = document.getElementById('modalBody');
@@ -33,6 +33,7 @@ const profileBtn = document.getElementById('profileBtn');
 document.addEventListener('DOMContentLoaded', async () => {
     await loadCategories();
     await loadProducts();
+    await loadCartFromBackend(); // Cargar carrito del backend si está autenticado
     updateCartUI();
     initEventListeners();
     updateUserUI();
@@ -49,17 +50,6 @@ function initEventListeners() {
         closeUserMenu();
     });
     sortSelect.addEventListener('change', handleSort);
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const category = link.dataset.category;
-            filterByCategory(category);
-
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-        });
-    });
 
     closeModal.addEventListener('click', closeProductModal);
 
@@ -154,9 +144,14 @@ async function handleLogout(e) {
     } catch (error) {
         console.error('Error logging out:', error);
     } finally {
-        // Clear local storage regardless of API response
+        // Limpiar TODO el localStorage (incluyendo carrito)
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('cart'); // ← IMPORTANTE: Limpiar carrito
+
+        // Limpiar carrito en memoria
+        cart = [];
+
         location.reload();
     }
 }
@@ -193,6 +188,38 @@ async function loadProducts() {
     }
 }
 
+// Cart Backend Sync Functions
+async function loadCartFromBackend() {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+        // Si no está autenticado, usar localStorage
+        cart = JSON.parse(localStorage.getItem('cart')) || [];
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/cart`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            cart = data.data || [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            console.log('Cart loaded from backend:', cart.length, 'items');
+        } else {
+            // Si falla, usar localStorage
+            cart = JSON.parse(localStorage.getItem('cart')) || [];
+        }
+    } catch (error) {
+        console.error('Error loading cart from backend:', error);
+        cart = JSON.parse(localStorage.getItem('cart')) || [];
+    }
+}
+
 async function loadCategories() {
     try {
         const response = await fetch(`${API_BASE_URL}/category`);
@@ -201,10 +228,48 @@ async function loadCategories() {
         if (data.data) {
             categories = data.data;
             console.log('Categories loaded:', categories);
+            renderCategoryNav();
         }
     } catch (error) {
         console.error('Error loading categories:', error);
     }
+}
+
+function renderCategoryNav() {
+    // Keep the "Todo" link
+    const allLink = categoryNav.querySelector('[data-category="all"]');
+
+    // Clear and rebuild nav
+    categoryNav.innerHTML = '';
+    categoryNav.appendChild(allLink);
+
+    // Add dynamic categories
+    categories.forEach(category => {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.className = 'nav-link';
+        link.dataset.category = category.slug;
+        link.textContent = category.name;
+
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            filterByCategory(category.slug);
+
+            categoryNav.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+        });
+
+        categoryNav.appendChild(link);
+    });
+
+    // Re-attach event listener to "Todo" link
+    allLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        filterByCategory('all');
+
+        categoryNav.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        allLink.classList.add('active');
+    });
 }
 
 // Render Functions
@@ -220,10 +285,12 @@ function renderProducts(products) {
         return;
     }
 
-    productsGrid.innerHTML = products.map(product => `
+    productsGrid.innerHTML = products.map(product => {
+        const imageUrl = product.path ? `http://localhost:8000${product.path}` : 'http://localhost:8000/images/products/default.jpg';
+        return `
         <div class="product-card" onclick="openProductModal(${product.id})">
             <div class="product-image">
-                <div class="product-image-placeholder">👕</div>
+                <img src="${imageUrl}" alt="${product.name}" onerror="this.src='http://localhost:8000/images/products/default.jpg'; this.onerror=null;">
                 ${product.stock < 10 && product.stock > 0 ? '<div class="product-badge">Últimas unidades</div>' : ''}
                 ${product.stock === 0 ? '<div class="product-badge" style="background: #ff4444;">Agotado</div>' : ''}
             </div>
@@ -240,7 +307,8 @@ function renderProducts(products) {
                 </button>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function getCategoryName(categoryId) {
@@ -257,10 +325,12 @@ function openProductModal(productId) {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
 
+    const imageUrl = product.path ? `http://localhost:8000${product.path}` : 'http://localhost:8000/images/products/default.jpg';
+
     modalBody.innerHTML = `
         <div class="modal-product">
             <div class="modal-image">
-                <div class="product-image-placeholder" style="font-size: 8rem;">👕</div>
+                <img src="${imageUrl}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" onerror="this.src='http://localhost:8000/images/products/default.jpg'; this.onerror=null;">
             </div>
             <div class="modal-details">
                 <div class="modal-category">${getCategoryName(product.category_id)}</div>
@@ -302,33 +372,67 @@ function closeProductModal() {
 }
 
 // Cart Functions
-function addToCart(productId) {
+async function addToCart(productId) {
     const product = allProducts.find(p => p.id === productId);
     if (!product || product.stock === 0) return;
 
-    const existingItem = cart.find(item => item.id === productId);
+    const token = localStorage.getItem('auth_token');
 
-    if (existingItem) {
-        if (existingItem.quantity < product.stock) {
-            existingItem.quantity++;
+    if (!token) {
+        // Usuario NO autenticado: usar localStorage
+        const existingItem = cart.find(item => item.id === productId);
+
+        if (existingItem) {
+            if (existingItem.quantity < product.stock) {
+                existingItem.quantity++;
+            } else {
+                alert('No hay más stock disponible');
+                return;
+            }
         } else {
-            alert('No hay más stock disponible');
-            return;
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: parseFloat(product.price),
+                size: product.size,
+                quantity: 1,
+                stock: product.stock
+            });
         }
-    } else {
-        cart.push({
-            id: product.id,
-            name: product.name,
-            price: parseFloat(product.price),
-            size: product.size,
-            quantity: 1,
-            stock: product.stock
-        });
+
+        saveCart();
+        updateCartUI();
+        showNotification('Producto añadido al carrito');
+        return;
     }
 
-    saveCart();
-    updateCartUI();
-    showNotification('Producto añadido al carrito');
+    // Usuario autenticado: sincronizar con backend
+    try {
+        const response = await fetch(`${API_BASE_URL}/cart`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 1
+            })
+        });
+
+        if (response.ok) {
+            await loadCartFromBackend(); // Recargar carrito del backend
+            updateCartUI();
+            showNotification('Producto añadido al carrito');
+        } else {
+            const error = await response.json();
+            alert(error.error || 'Error al añadir al carrito');
+        }
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+        alert('Error al añadir al carrito');
+    }
 }
 
 function removeFromCart(productId) {

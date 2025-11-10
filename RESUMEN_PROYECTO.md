@@ -15,6 +15,7 @@ FuckOff/
 │   │   ├── Http/
 │   │   │   ├── Controllers/Api/
 │   │   │   │   ├── AuthController.php
+│   │   │   │   ├── CartController.php       # ← NUEVO
 │   │   │   │   ├── CategoryController.php
 │   │   │   │   ├── ProductController.php
 │   │   │   │   ├── UserController.php
@@ -25,7 +26,8 @@ FuckOff/
 │   │       ├── User.php
 │   │       ├── Category.php
 │   │       ├── Product.php
-│   │       └── Order.php
+│   │       ├── Order.php
+│   │       └── CartItem.php                 # ← NUEVO
 │   ├── database/
 │   │   ├── migrations/
 │   │   └── seeders/
@@ -142,7 +144,12 @@ docker exec -it tienda_backend bash
 - id, category_id, name, slug, description, price, size, stock, path, active
 
 #### `orders`
-- id, user_id, total, status, created_at
+- id, user_id, total_price, subtotal, tax, shipping_cost, status, shipping_address, created_at
+
+#### `cart_items` 🆕
+- id, user_id, product_id, quantity, timestamps
+- **Relaciones**: belongsTo(User), belongsTo(Product)
+- **Constraint**: unique(user_id, product_id) - Un producto por usuario
 
 #### `personal_access_tokens` (Sanctum)
 - Tokens de autenticación
@@ -194,12 +201,22 @@ GET    /api/product/{id}       # Ver uno
 
 ### Protegidos (requiere token)
 
+#### Carrito 🆕
+```
+GET    /api/cart                    # Obtener carrito del usuario
+POST   /api/cart                    # Añadir producto al carrito
+PUT    /api/cart/{productId}        # Actualizar cantidad
+DELETE /api/cart/{productId}        # Eliminar producto del carrito
+DELETE /api/cart                    # Vaciar carrito completo
+POST   /api/cart/sync               # Sincronizar carrito desde localStorage
+```
+
 #### Órdenes
 ```
 GET    /api/order              # Listar órdenes del usuario
-POST   /api/order              # Crear orden
+POST   /api/order              # Crear orden (con validación de stock)
 GET    /api/order/{id}         # Ver orden
-PUT    /api/order/{id}         # Actualizar orden
+PUT    /api/order/{id}         # Actualizar orden (restaura stock si cancela)
 DELETE /api/order/{id}         # Eliminar orden
 ```
 
@@ -214,8 +231,8 @@ DELETE /api/category/{id}      # Eliminar
 
 #### Productos
 ```
-POST   /api/product            # Crear
-PUT    /api/product/{id}       # Actualizar
+POST   /api/product            # Crear (soporta upload de imágenes)
+PUT    /api/product/{id}       # Actualizar (soporta upload de imágenes)
 DELETE /api/product/{id}       # Eliminar
 ```
 
@@ -237,12 +254,17 @@ DELETE /api/user/{id}          # Eliminar
 #### Funcionalidades
 - ✅ Hero section con llamado a la acción
 - ✅ Catálogo de productos con grid responsive
-- ✅ Filtrado por categorías (tabs en navbar)
+- ✅ Filtrado por categorías (tabs en navbar - carga dinámica desde API)
 - ✅ Ordenamiento (precio, nombre)
 - ✅ Badges de stock (últimas unidades, agotado)
 - ✅ Modal de detalles de producto
 - ✅ Carrito lateral (sidebar)
-- ✅ LocalStorage para persistencia del carrito
+- ✅ **Sistema de carrito persistente** 🆕:
+  - Carrito en localStorage para usuarios no autenticados
+  - Carrito en base de datos para usuarios autenticados
+  - Sincronización automática al hacer login
+  - Se limpia de vista al cerrar sesión, pero persiste en BD
+  - Restauración automática al volver a iniciar sesión
 - ✅ Gestión de cantidades (+-) con validación de stock
 - ✅ Cálculo automático de totales
 
@@ -259,11 +281,15 @@ DELETE /api/user/{id}          # Eliminar
 - ✅ Validación de contraseñas coincidentes
 - ✅ Loaders durante peticiones
 - ✅ Manejo de errores con mensajes
+- ✅ **Sincronización de carrito al hacer login** 🆕:
+  - Si localStorage tiene items → sincroniza con backend
+  - Si localStorage vacío → carga desde backend
 - ✅ Redirección automática según rol:
   - Admin → `/HTML/admin.html`
   - User → `/HTML/index.html` o URL de retorno
 - ✅ Parámetro `?register=1` para mostrar form de registro
 - ✅ Parámetro `?return=URL` para redirección post-login
+- ✅ Botón "Volver" para regresar a la página anterior 🆕
 
 ### Checkout (`checkout.html`)
 
@@ -272,8 +298,15 @@ DELETE /api/user/{id}          # Eliminar
 - ✅ Formulario de información de envío
 - ✅ Formulario de pago (solo visual, no procesa)
 - ✅ Resumen de orden con productos del carrito
-- ✅ Cálculo de totales
+- ✅ **Desglose detallado de IVA** 🆕:
+  - Base imponible (precio sin IVA)
+  - + IVA (21%)
+  - = Subtotal productos
+  - + Envío (5€)
+  - = Total final
+  - **Nota**: El IVA se EXTRAE del precio (ya incluido), no se suma
 - ✅ Layout de 2 columnas (formulario + resumen)
+- ✅ Botón "Volver" para regresar a la página anterior 🆕
 
 ### Panel Admin (`admin.html`)
 
@@ -293,7 +326,12 @@ DELETE /api/user/{id}          # Eliminar
 **2. Gestión de Productos**
 - ✅ Tabla con listado (ID, nombre, categoría, precio, stock, talla, estado)
 - ✅ Crear nuevo producto (modal con todos los campos)
-- ✅ Editar producto (modal)
+- ✅ **Upload de imágenes con Laravel Storage** 🆕:
+  - Input type="file" para subir imágenes
+  - Validación: jpeg, png, jpg, gif, webp (max 5MB)
+  - Almacenamiento en storage/app/public/products
+  - URL pública servida desde /storage/products/
+- ✅ Editar producto (modal con upload de imagen)
 - ✅ Eliminar producto (confirmación)
 - ✅ Toggle activo/inactivo
 - ✅ Seleccionar categoría (dropdown)
@@ -312,6 +350,9 @@ DELETE /api/user/{id}          # Eliminar
 - ✅ Ver detalles de orden (modal)
 - ✅ Actualizar estado de orden (modal)
 - ✅ Estados: pending, processing, shipped, delivered, cancelled
+- ✅ **Gestión automática de stock** 🆕:
+  - Al crear orden → reduce stock de productos
+  - Al cancelar orden → restaura stock + 1 unidad de bonus
 - ✅ Badges de colores por estado
 
 ---
@@ -635,6 +676,284 @@ php artisan make:seeder NombreSeeder
 
 ## 🐛 Problemas Resueltos
 
+### Error de Sintaxis en OrderController - CRÍTICO (05/11/2025)
+
+#### Problema
+El sistema de checkout fallaba con **error 500** al intentar crear pedidos. Los usuarios no podían completar sus compras.
+
+#### Causa Raíz
+```php
+// ❌ INCORRECTO - ParseError en OrderController.php línea 47
+public function store(Request $request) {
+    DB::beginTransaction();
+    try {
+        const TAX_RATE = 0.21;      // Error: const dentro de método
+        const SHIPPING_COST = 5.00;  // Error: const dentro de método
+    }
+}
+```
+
+**Error de logs**: `ParseError: syntax error, unexpected token "const" at OrderController.php:47`
+
+PHP no permite declarar constantes con `const` dentro de métodos. Solo se permiten a nivel de clase.
+
+#### Solución Aplicada
+**Archivo**: `backend/app/Http/Controllers/Api/OrderController.php`
+
+1. **Movidas constantes a nivel de clase** (líneas 15-16):
+```php
+class OrderController extends Controller
+{
+    private const TAX_RATE = 0.21;
+    private const SHIPPING_COST = 5.00;
+}
+```
+
+2. **Actualizadas referencias** con `self::` (líneas 81, 85, 97):
+```php
+$subtotal = round($totalWithTax / (1 + self::TAX_RATE), 2);
+$total = $totalWithTax + self::SHIPPING_COST;
+'shipping_cost' => self::SHIPPING_COST,
+```
+
+3. **Limpiadas cachés**:
+   - `php artisan optimize:clear`
+   - `composer dump-autoload` (6223 clases regeneradas)
+
+#### Resultado
+✅ Sistema de checkout completamente funcional
+✅ Pedidos se crean correctamente con cálculo de IVA
+✅ Stock se reduce automáticamente al crear orden
+
+---
+
+### Rediseño de UI de Autenticación (05/11/2025)
+
+#### Necesidad
+Los botones "Volver", "Iniciar Sesión" y "Registrarse" estaban dentro de las cajas de glassmorphism, dificultando su visibilidad y accesibilidad.
+
+#### Solución Implementada
+
+**Frontend - HTML** (`frontend/HTML/login.html`):
+- ✅ Extraídos botones fuera de `.auth-form`
+- ✅ Creados contenedores `.auth-external-actions` separados para login/registro
+- ✅ Sistema de toggle entre formularios mejorado
+
+**Frontend - CSS** (`frontend/CSS/styles.css`):
+- ✅ Nuevos estilos `.auth-external-actions` con glassmorphism sutil
+- ✅ Clase `.auth-link` para enlaces con efectos hover (elevation, glow)
+- ✅ Clase `.btn-outline` para botón "Volver" con borde visible
+- ✅ Estilos responsive para móviles (< 768px)
+
+**Frontend - JavaScript** (`frontend/JS/auth.js`):
+- ✅ Lógica de visibilidad sincronizada entre formularios y botones externos
+- ✅ `showRegisterForm()` / `showLoginForm()` actualizados
+
+#### Diseño Visual Final
+```
+┌─────────────────────────────────────┐
+│   [Caja de Login glassmorphism]     │
+│   - Campos de formulario            │
+│   - Botón submit                    │
+└─────────────────────────────────────┘
+        ↓ 2rem de separación
+┌─────────────────────────────────────┐
+│ ¿No tienes cuenta? [Regístrate]    │ ← Semi-transparente + blur
+└─────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│         [← Volver]                  │ ← Borde outline visible
+└─────────────────────────────────────┘
+```
+
+**Mejoras UX**:
+- 📍 Botones claramente visibles fuera de la caja principal
+- 📍 Hover effects con elevación y glow
+- 📍 Icono de flecha (←) en botón "Volver"
+- 📍 Contraste mejorado con fondos semi-transparentes
+
+#### Archivos Modificados
+- `frontend/HTML/login.html` - Reestructuración del DOM
+- `frontend/CSS/styles.css` - 70+ líneas de nuevos estilos
+- `frontend/JS/auth.js` - Lógica de toggle mejorada
+
+---
+
+### Corrección de Docker Build - Symlink Storage (05/11/2025)
+
+#### Problema
+Docker build fallaba con error: `invalid file request public/storage`
+
+#### Causa
+Docker no puede copiar enlaces simbólicos durante el contexto de build. El symlink `public/storage → storage/app/public` causaba el fallo.
+
+#### Solución Aplicada
+
+1. **Eliminado symlink del host**:
+```bash
+rm backend/public/storage
+```
+
+2. **Creado `.dockerignore`** (`backend/.dockerignore`):
+```
+public/storage
+vendor/
+node_modules/
+.env
+storage/framework/cache/data/*
+# ... otros archivos
+```
+
+3. **Modificado entrypoint** (`backend/docker-entrypoint.sh` líneas 12-16):
+```bash
+# Crear enlace simbólico de storage si no existe
+if [ ! -L public/storage ]; then
+  echo "Creating storage symlink..."
+  php artisan storage:link
+fi
+```
+
+4. **Rebuild exitoso**:
+```bash
+docker-compose down
+docker-compose up --build -d
+```
+
+#### Resultado
+✅ Build de Docker completado sin errores
+✅ Symlink creado automáticamente en runtime
+✅ Log confirmado: "The [public/storage] link has been connected to [storage/app/public]"
+✅ Upload de imágenes de productos funcionando correctamente
+
+---
+
+### Sistema de Carrito Persistente Implementado (04/11/2025)
+
+#### Necesidad
+El usuario requería que el carrito:
+1. Se vaciara visualmente al cerrar sesión
+2. Persistiera en la base de datos por cuenta de usuario
+3. Se restaurara al volver a iniciar sesión
+4. Sincronizara items de localStorage al hacer login
+
+#### Implementación Completa
+
+**Backend - Base de Datos:**
+- Migración `create_cart_items_table` con campos: user_id, product_id, quantity
+- Constraint único: un producto por usuario
+- Foreign keys con cascade delete
+- Modelo `CartItem` con relaciones User y Product
+
+**Backend - API CartController:**
+- `GET /api/cart` - Obtener carrito del usuario
+- `POST /api/cart` - Añadir producto (con validación de stock)
+- `PUT /api/cart/{productId}` - Actualizar cantidad
+- `DELETE /api/cart/{productId}` - Eliminar producto
+- `DELETE /api/cart` - Vaciar carrito completo
+- `POST /api/cart/sync` - Sincronizar desde localStorage (usado en login)
+
+**Frontend - app.js:**
+- `loadCartFromBackend()` - Carga carrito desde API al iniciar
+- `addToCart()` modificado - Sincroniza con backend si está autenticado
+- `handleLogout()` modificado - Limpia localStorage y array del carrito
+
+**Frontend - auth.js:**
+- `syncCartAfterLogin()` - Nueva función que:
+  - Si localStorage vacío → carga desde backend
+  - Si localStorage con items → POST /api/cart/sync
+
+#### Flujo Implementado
+1. **Usuario sin login**: Carrito en localStorage únicamente
+2. **Login con carrito**: localStorage se sincroniza a backend, se limpia localStorage y carga desde BD
+3. **Login sin carrito**: Carga carrito desde backend si existe
+4. **Logout**: Se limpia de vista, persiste en BD
+5. **Login nuevamente**: Restaura desde BD
+
+#### Archivos Modificados
+- `backend/database/migrations/2025_11_04_132439_create_cart_items_table.php`
+- `backend/app/Models/CartItem.php`
+- `backend/app/Http/Controllers/Api/CartController.php`
+- `backend/routes/api.php:33-38`
+- `frontend/JS/app.js` (loadCartFromBackend, addToCart, handleLogout)
+- `frontend/JS/auth.js` (syncCartAfterLogin)
+
+---
+
+### Botones de Navegación "Volver" Añadidos (04/11/2025)
+
+#### Necesidad
+El usuario requería botones para volver a la página anterior en:
+- Página de login/registro
+- Página de checkout
+
+#### Implementación
+- `frontend/HTML/login.html:55-57, 100-102` - Botón "Volver" en ambos formularios
+- `frontend/HTML/checkout.html:145` - Botón "Volver" reemplazando link de tienda
+- `frontend/CSS/styles.css:1297-1299` - Clase `.auth-back` para estilos
+- Todos usan `javascript:history.back()` para navegación del historial
+
+---
+
+### Desglose Visual de IVA Implementado (04/11/2025)
+
+#### Necesidad
+El usuario requería que el IVA (21%) se mostrara claramente desglosado, con la aclaración de que el precio ya incluye IVA (extracción, no adición).
+
+#### Fórmula Aplicada
+```php
+$totalWithTax = sum(product_price * quantity);
+$subtotal = round($totalWithTax / 1.21, 2);  // Base imponible
+$tax = round($totalWithTax - $subtotal, 2);   // IVA extraído
+$total = $totalWithTax + SHIPPING_COST;
+```
+
+#### Implementación Frontend
+- `frontend/HTML/checkout.html:110-127` - Sección visual con desglose
+- `frontend/CSS/styles.css` - Estilos para `.summary-section`
+- Layout mejorado con indentación, símbolos (+, =) y highlights
+
+#### Resultado Visual
+```
+Desglose de productos:
+  Base imponible         45.45€
+  + IVA (21%)            9.55€
+  = Subtotal productos   55.00€
+
+Envío                    5.00€
+────────────────────────────
+Total                    60.00€
+```
+
+---
+
+### Sistema de Upload de Imágenes para Productos (03/11/2025)
+
+#### Necesidad
+Cambiar el input de URL por upload de archivos para las imágenes de productos.
+
+#### Implementación
+
+**Backend:**
+- `ProductController::store()` y `update()` modificados
+- Validación: `image|mimes:jpeg,png,jpg,gif,webp|max:5120`
+- Storage en `storage/app/public/products/`
+- Filename: `timestamp_uniqid.extension`
+- Ruta en DB: `/storage/products/filename.ext`
+- Comando ejecutado: `php artisan storage:link`
+- Ruta pública servida desde `backend/routes/api.php:61-69`
+
+**Frontend:**
+- `frontend/JS/admin.js` modificado para usar `FormData`
+- Input cambiado de `<input type="text">` a `<input type="file">`
+- Headers sin `Content-Type` (browser añade multipart boundary)
+- Workaround Laravel: `_method: 'PUT'` en FormData para updates
+
+#### Archivos Modificados
+- `backend/app/Http/Controllers/Api/ProductController.php:42-49, 70-78`
+- `frontend/JS/admin.js:saveProduct()`
+- `frontend/HTML/admin.html` - Input file en modal de productos
+
+---
+
 ### Error: Middleware CheckAdmin no encontrado (30/10/2025)
 
 #### Síntoma
@@ -687,10 +1006,17 @@ docker exec tienda_backend composer dump-autoload
 ## 📞 Información de Contacto
 
 **Proyecto**: FVCKOFF E-commerce
-**Versión**: 1.0.1
-**Fecha**: Octubre 2025
+**Versión**: 1.0.3
+**Fecha**: Noviembre 2025
 **Stack**: Laravel 11 + Vanilla JS + Docker
-**Última Actualización**: 30/10/2025
+**Última Actualización**: 05/11/2025
+
+### 🆕 Cambios en v1.0.3 (05/11/2025)
+- ✅ **CRÍTICO**: Corregido error fatal en sistema de checkout (ParseError en OrderController)
+- ✅ **UX**: Rediseño completo de UI de autenticación con botones externos visibles
+- ✅ **DevOps**: Solucionado problema de Docker build con enlaces simbólicos
+- ✅ Sistema de pedidos completamente funcional
+- ✅ Upload de imágenes de productos operativo
 
 ---
 

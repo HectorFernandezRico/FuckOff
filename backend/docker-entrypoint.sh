@@ -9,6 +9,12 @@ if [ ! -f vendor/autoload.php ]; then
   composer install --no-interaction --prefer-dist --no-scripts
 fi
 
+# Crear enlace simbólico de storage si no existe
+if [ ! -L public/storage ]; then
+  echo "Creating storage symlink..."
+  php artisan storage:link
+fi
+
 # Arrancar artisan serve si está habilitado (DEV)
 if [ "${ARTISAN_SERVE}" = "1" ]; then
   echo "Starting PHP built-in server with multiple workers on 0.0.0.0:${ARTISAN_PORT}"

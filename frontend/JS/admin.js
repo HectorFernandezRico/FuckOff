@@ -305,7 +305,7 @@ function openProductModal(id = null) {
 
     adminModalBody.innerHTML = `
         <h2 class="modal-title">${isEdit ? 'Editar' : 'Nuevo'} Producto</h2>
-        <form class="admin-form" id="productForm">
+        <form class="admin-form" id="productForm" enctype="multipart/form-data">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Nombre</label>
@@ -348,8 +348,9 @@ function openProductModal(id = null) {
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Imagen (URL)</label>
-                <input type="text" class="form-input" id="productPath" value="${product?.path || '/images/products/default.jpg'}">
+                <label class="form-label">Imagen</label>
+                <input type="file" class="form-input" id="productImage" accept="image/*">
+                ${product?.path ? `<small style="color: #888; margin-top: 0.5rem; display: block;">Imagen actual: ${product.path.split('/').pop()}</small>` : ''}
             </div>
             <div class="form-group">
                 <label class="checkbox-label">
@@ -373,30 +374,40 @@ function openProductModal(id = null) {
 }
 
 async function saveProduct(id = null) {
-    const productData = {
-        name: document.getElementById('productName').value,
-        slug: document.getElementById('productSlug').value,
-        description: document.getElementById('productDescription').value,
-        price: parseFloat(document.getElementById('productPrice').value),
-        stock: parseInt(document.getElementById('productStock').value),
-        size: document.getElementById('productSize').value,
-        category_id: parseInt(document.getElementById('productCategory').value),
-        path: document.getElementById('productPath').value,
-        active: document.getElementById('productActive').checked ? 1 : 0
-    };
+    const formData = new FormData();
+
+    formData.append('name', document.getElementById('productName').value);
+    formData.append('slug', document.getElementById('productSlug').value);
+    formData.append('description', document.getElementById('productDescription').value);
+    formData.append('price', document.getElementById('productPrice').value);
+    formData.append('stock', document.getElementById('productStock').value);
+    formData.append('size', document.getElementById('productSize').value);
+    formData.append('category_id', document.getElementById('productCategory').value);
+    formData.append('active', document.getElementById('productActive').checked ? '1' : '0');
+
+    // Agregar imagen si se seleccionó
+    const imageInput = document.getElementById('productImage');
+    if (imageInput.files.length > 0) {
+        formData.append('image', imageInput.files[0]);
+    }
+
+    // Para PUT requests en Laravel con FormData, necesitamos usar POST con _method
+    if (id) {
+        formData.append('_method', 'PUT');
+    }
 
     try {
         const url = id ? `${API_BASE_URL}/product/${id}` : `${API_BASE_URL}/product`;
-        const method = id ? 'PUT' : 'POST';
+        const method = 'POST'; // Siempre POST cuando usamos FormData
 
         const response = await fetch(url, {
             method,
             headers: {
-                'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${authToken}`
+                // NO incluir Content-Type, el navegador lo añade automáticamente con boundary
             },
-            body: JSON.stringify(productData)
+            body: formData
         });
 
         if (response.ok) {
@@ -404,11 +415,12 @@ async function saveProduct(id = null) {
             loadProducts();
             showNotification(id ? 'Producto actualizado' : 'Producto creado');
         } else {
-            throw new Error('Error al guardar producto');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al guardar producto');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al guardar el producto');
+        alert('Error al guardar el producto: ' + error.message);
     }
 }
 
@@ -609,7 +621,7 @@ function renderOrders() {
         <tr>
             <td>#${order.id}</td>
             <td>${order.user?.name || 'N/A'}</td>
-            <td>${parseFloat(order.total || 0).toFixed(2)}€</td>
+            <td>${parseFloat(order.total_price || 0).toFixed(2)}€</td>
             <td><span class="badge badge-${order.status}">${order.status || 'pending'}</span></td>
             <td>${formatDate(order.created_at)}</td>
             <td class="actions-cell">
@@ -636,8 +648,20 @@ function viewOrder(id) {
                 <span>${order.user?.email || 'N/A'}</span>
             </div>
             <div class="detail-row">
+                <span class="detail-label">Subtotal:</span>
+                <span>${parseFloat(order.subtotal || 0).toFixed(2)}€</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">IVA (21%):</span>
+                <span>${parseFloat(order.tax || 0).toFixed(2)}€</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Envío:</span>
+                <span>${parseFloat(order.shipping_cost || 0).toFixed(2)}€</span>
+            </div>
+            <div class="detail-row" style="font-weight: 600; font-size: 1.1em; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
                 <span class="detail-label">Total:</span>
-                <span>${parseFloat(order.total || 0).toFixed(2)}€</span>
+                <span>${parseFloat(order.total_price || 0).toFixed(2)}€</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Estado:</span>
