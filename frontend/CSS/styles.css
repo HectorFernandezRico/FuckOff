@@ -1029,6 +1029,152 @@ body {
     font-weight: 600;
 }
 
+/* Size Selector */
+.size-selector-container {
+    margin: 1.5rem 0;
+}
+
+.size-selector-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--white);
+}
+
+.size-selector {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.size-option {
+    background: rgba(30, 30, 30, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 50px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.size-option:hover {
+    background: rgba(40, 40, 40, 0.7);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.size-option.active {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: var(--white);
+    color: var(--white);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.size-option:active {
+    transform: scale(0.95);
+}
+
+.size-option.out-of-stock {
+    background: rgba(255, 68, 68, 0.2);
+    border-color: rgba(255, 68, 68, 0.4);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
+.size-option.out-of-stock .size-label {
+    text-decoration: line-through;
+}
+
+.size-option.out-of-stock:hover {
+    background: rgba(255, 68, 68, 0.2);
+    transform: none;
+}
+
+/* Product Gallery */
+.product-gallery {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.gallery-nav {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1rem;
+    pointer-events: none;
+}
+
+.gallery-btn {
+    pointer-events: all;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    opacity: 0.7;
+}
+
+.gallery-btn:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.gallery-btn:active {
+    transform: scale(0.95);
+}
+
+.gallery-indicators {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.gallery-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gallery-indicator:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.2);
+}
+
+.gallery-indicator.active {
+    background: var(--white);
+    border-color: var(--white);
+    transform: scale(1.3);
+}
+
 /* Footer */
 .footer {
     background: linear-gradient(180deg, var(--black) 0%, var(--black-light) 100%);
@@ -1252,6 +1398,38 @@ body {
 
 .form-error.show {
     display: block;
+}
+
+/* Size Stock Container */
+.size-stock-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(20, 20, 20, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.size-stock-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.size-stock-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--white);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.size-stock-input {
+    padding: 0.6rem;
+    text-align: center;
+    font-weight: 600;
 }
 
 .btn-full {

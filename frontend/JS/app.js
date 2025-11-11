@@ -300,7 +300,6 @@ function renderProducts(products) {
                 <p class="product-description">${product.description || 'Sin descripción'}</p>
                 <div class="product-footer">
                     <span class="product-price">${parseFloat(product.price).toFixed(2)}€</span>
-                    <span class="product-size">Talla ${product.size}</span>
                 </div>
                 <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''}>
                     ${product.stock === 0 ? 'Agotado' : 'Añadir al Carrito'}
@@ -326,25 +325,96 @@ function openProductModal(productId) {
     if (!product) return;
 
     const imageUrl = product.path ? `http://localhost:8000${product.path}` : 'http://localhost:8000/images/products/default.jpg';
+    const imageSecondaryUrl = product.image_secondary ? `http://localhost:8000${product.image_secondary}` : null;
+
+    // Crear array de imágenes disponibles
+    const images = [imageUrl];
+    if (imageSecondaryUrl) {
+        images.push(imageSecondaryUrl);
+    }
+
+    // Resetear flag de primera talla seleccionada
+    window.firstSizeSelected = false;
+
+    // Determinar si el producto tiene tallas configuradas o usa stock general
+    const hasSizesConfigured = product.sizes && product.sizes.length > 0;
+
+    // Calcular el stock inicial
+    let initialStock = product.stock;
+    if (hasSizesConfigured) {
+        const firstAvailableSize = product.sizes.find(s => s.stock > 0);
+        initialStock = firstAvailableSize ? firstAvailableSize.stock : 0;
+    }
 
     modalBody.innerHTML = `
         <div class="modal-product">
             <div class="modal-image">
-                <img src="${imageUrl}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" onerror="this.src='http://localhost:8000/images/products/default.jpg'; this.onerror=null;">
+                <div class="product-gallery">
+                    <img id="mainProductImage" src="${images[0]}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" onerror="this.src='http://localhost:8000/images/products/default.jpg'; this.onerror=null;">
+                    ${images.length > 1 ? `
+                        <div class="gallery-nav">
+                            <button class="gallery-btn gallery-prev" onclick="changeProductImage(-1)">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <button class="gallery-btn gallery-next" onclick="changeProductImage(1)">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="gallery-indicators">
+                            ${images.map((_, index) => `<span class="gallery-indicator ${index === 0 ? 'active' : ''}" onclick="setProductImage(${index})"></span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
             </div>
             <div class="modal-details">
                 <div class="modal-category">${getCategoryName(product.category_id)}</div>
                 <h2>${product.name}</h2>
                 <div class="modal-price">${parseFloat(product.price).toFixed(2)}€</div>
                 <p class="modal-description">${product.description || 'Sin descripción disponible para este producto.'}</p>
+
+                <div class="size-selector-container">
+                    <label class="size-selector-label">Selecciona tu talla:</label>
+                    <div class="size-selector" id="sizeSelector">
+                        ${['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                            // Si no hay tallas configuradas, usar el stock general del producto
+                            let stock;
+                            if (hasSizesConfigured) {
+                                const sizeData = product.sizes.find(s => s.size === size);
+                                stock = sizeData?.stock || 0;
+                            } else {
+                                // Sin tallas configuradas: todas las tallas tienen el stock general
+                                stock = product.stock;
+                            }
+
+                            const hasStock = stock > 0;
+                            const isFirstAvailable = !window.firstSizeSelected && hasStock;
+
+                            if (isFirstAvailable) {
+                                window.firstSizeSelected = true;
+                            }
+
+                            return `
+                            <button class="size-option ${isFirstAvailable ? 'active' : ''} ${!hasStock ? 'out-of-stock' : ''}"
+                                    onclick="selectSize('${size}', ${stock})"
+                                    data-size="${size}"
+                                    data-stock="${stock}"
+                                    ${!hasStock ? 'disabled' : ''}>
+                                <span class="size-label">${size}</span>
+                                <span class="size-stock-label">${hasStock ? stock + ' uds' : 'Agotado'}</span>
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
                 <div class="modal-info">
                     <div class="info-item">
-                        <div class="info-label">Talla</div>
-                        <div class="info-value">${product.size}</div>
-                    </div>
-                    <div class="info-item">
                         <div class="info-label">Stock</div>
-                        <div class="info-value">${product.stock} unidades</div>
+                        <div class="info-value" id="productStockDisplay">${initialStock} unidades</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Estado</div>
@@ -355,12 +425,19 @@ function openProductModal(productId) {
                         <div class="info-value">#${product.id.toString().padStart(5, '0')}</div>
                     </div>
                 </div>
-                <button class="btn-primary" onclick="addToCart(${product.id}); closeProductModal();" ${product.stock === 0 ? 'disabled' : ''} style="width: 100%;">
+                <button class="btn-primary" onclick="addToCartWithSize(${product.id}); closeProductModal();" ${product.stock === 0 ? 'disabled' : ''} style="width: 100%;">
                     ${product.stock === 0 ? 'Agotado' : 'Añadir al Carrito'}
                 </button>
             </div>
         </div>
     `;
+
+    // Guardar imágenes en una variable global para la navegación
+    window.currentProductImages = images;
+    window.currentImageIndex = 0;
+
+    // Establecer el stock inicial
+    window.selectedSizeStock = initialStock;
 
     productModal.classList.add('active');
     overlay.classList.add('active');
@@ -371,22 +448,113 @@ function closeProductModal() {
     overlay.classList.remove('active');
 }
 
+// Size selector functions
+function selectSize(size, stock) {
+    // No hacer nada si no hay stock
+    if (stock <= 0) return;
+
+    // Remover clase active de todas las opciones
+    document.querySelectorAll('.size-option').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Añadir clase active a la opción seleccionada
+    const selectedBtn = document.querySelector(`.size-option[data-size="${size}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('active');
+    }
+
+    // Guardar la talla y stock seleccionado globalmente
+    window.selectedSize = size;
+    window.selectedSizeStock = stock;
+
+    // Actualizar el display del stock
+    const stockDisplay = document.getElementById('productStockDisplay');
+    if (stockDisplay) {
+        stockDisplay.textContent = `${stock} unidades`;
+    }
+}
+
+function addToCartWithSize(productId) {
+    const selectedSize = window.selectedSize || document.querySelector('.size-option.active')?.dataset.size;
+
+    if (!selectedSize) {
+        alert('Por favor, selecciona una talla');
+        return;
+    }
+
+    addToCart(productId, selectedSize);
+}
+
+// Gallery navigation functions
+function changeProductImage(direction) {
+    if (!window.currentProductImages || window.currentProductImages.length <= 1) return;
+
+    window.currentImageIndex += direction;
+
+    // Loop around
+    if (window.currentImageIndex < 0) {
+        window.currentImageIndex = window.currentProductImages.length - 1;
+    } else if (window.currentImageIndex >= window.currentProductImages.length) {
+        window.currentImageIndex = 0;
+    }
+
+    updateProductImage();
+}
+
+function setProductImage(index) {
+    if (!window.currentProductImages || index < 0 || index >= window.currentProductImages.length) return;
+
+    window.currentImageIndex = index;
+    updateProductImage();
+}
+
+function updateProductImage() {
+    const mainImage = document.getElementById('mainProductImage');
+    if (mainImage && window.currentProductImages) {
+        mainImage.src = window.currentProductImages[window.currentImageIndex];
+
+        // Update indicators
+        const indicators = document.querySelectorAll('.gallery-indicator');
+        indicators.forEach((indicator, index) => {
+            if (index === window.currentImageIndex) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        });
+    }
+}
+
 // Cart Functions
-async function addToCart(productId) {
+async function addToCart(productId, selectedSize = null) {
     const product = allProducts.find(p => p.id === productId);
-    if (!product || product.stock === 0) return;
+    if (!product) return;
+
+    // Usar la talla seleccionada o la talla por defecto del producto
+    const size = selectedSize || product.size;
+
+    // Verificar stock de la talla específica
+    const sizeData = product.sizes?.find(s => s.size === size);
+    const availableStock = sizeData ? sizeData.stock : 0;
+
+    if (availableStock === 0) {
+        alert(`La talla ${size} no tiene stock disponible`);
+        return;
+    }
 
     const token = localStorage.getItem('auth_token');
 
     if (!token) {
         // Usuario NO autenticado: usar localStorage
-        const existingItem = cart.find(item => item.id === productId);
+        // Buscar item con mismo id Y misma talla
+        const existingItem = cart.find(item => item.id === productId && item.size === size);
 
         if (existingItem) {
-            if (existingItem.quantity < product.stock) {
+            if (existingItem.quantity < availableStock) {
                 existingItem.quantity++;
             } else {
-                alert('No hay más stock disponible');
+                alert(`No hay más stock disponible para la talla ${size}`);
                 return;
             }
         } else {
@@ -394,9 +562,9 @@ async function addToCart(productId) {
                 id: product.id,
                 name: product.name,
                 price: parseFloat(product.price),
-                size: product.size,
+                size: size,
                 quantity: 1,
-                stock: product.stock
+                stock: availableStock
             });
         }
 
@@ -435,25 +603,25 @@ async function addToCart(productId) {
     }
 }
 
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
+function removeFromCart(productId, size) {
+    cart = cart.filter(item => !(item.id === productId && item.size === size));
     saveCart();
     updateCartUI();
 }
 
-function updateQuantity(productId, change) {
-    const item = cart.find(item => item.id === productId);
+function updateQuantity(productId, size, change) {
+    const item = cart.find(item => item.id === productId && item.size === size);
     if (!item) return;
 
     const newQuantity = item.quantity + change;
 
     if (newQuantity <= 0) {
-        removeFromCart(productId);
+        removeFromCart(productId, size);
         return;
     }
 
     if (newQuantity > item.stock) {
-        alert('No hay más stock disponible');
+        alert(`No hay más stock disponible para la talla ${size}`);
         return;
     }
 
@@ -489,9 +657,9 @@ function updateCartUI() {
                 <div class="cart-item-footer">
                     <div class="cart-item-price">${(item.price * item.quantity).toFixed(2)}€</div>
                     <div class="cart-item-quantity">
-                        <button class="btn-qty" onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <button class="btn-qty" onclick="updateQuantity(${item.id}, '${item.size}', -1)">-</button>
                         <span>${item.quantity}</span>
-                        <button class="btn-qty" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button class="btn-qty" onclick="updateQuantity(${item.id}, '${item.size}', 1)">+</button>
                     </div>
                 </div>
             </div>

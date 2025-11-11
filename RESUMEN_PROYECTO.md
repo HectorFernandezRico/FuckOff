@@ -141,7 +141,12 @@ docker exec -it tienda_backend bash
 - id, name, slug
 
 #### `products`
-- id, category_id, name, slug, description, price, size, stock, path, active
+- id, category_id, name, slug, description, price, size, stock, path, image_secondary, active
+
+#### `product_sizes` 🆕
+- id, product_id, size (enum), stock, timestamps
+- **Relaciones**: belongsTo(Product)
+- **Constraint**: unique(product_id, size) - Una entrada por talla por producto
 
 #### `orders`
 - id, user_id, total_price, subtotal, tax, shipping_cost, status, shipping_address, created_at
@@ -258,14 +263,26 @@ DELETE /api/user/{id}          # Eliminar
 - ✅ Ordenamiento (precio, nombre)
 - ✅ Badges de stock (últimas unidades, agotado)
 - ✅ Modal de detalles de producto
+- ✅ **Sistema de galería de imágenes** 🆕:
+  - Dos imágenes por producto (principal + secundaria)
+  - Navegación prev/next con botones
+  - Indicadores visuales de imagen actual
+  - Transiciones suaves con glassmorphism
+- ✅ **Sistema de tallas completo** 🆕:
+  - 6 tallas disponibles: XS, S, M, L, XL, XXL
+  - Stock independiente por talla
+  - Tallas sin stock: rojas, tachadas y deshabilitadas
+  - Display dinámico de stock al seleccionar talla
+  - Auto-selección de primera talla disponible
 - ✅ Carrito lateral (sidebar)
-- ✅ **Sistema de carrito persistente** 🆕:
+- ✅ **Sistema de carrito persistente**:
   - Carrito en localStorage para usuarios no autenticados
   - Carrito en base de datos para usuarios autenticados
   - Sincronización automática al hacer login
   - Se limpia de vista al cerrar sesión, pero persiste en BD
   - Restauración automática al volver a iniciar sesión
-- ✅ Gestión de cantidades (+-) con validación de stock
+  - **Items diferenciados por talla** 🆕: mismo producto con diferentes tallas = items separados
+- ✅ Gestión de cantidades (+-) con validación de stock por talla
 - ✅ Cálculo automático de totales
 
 #### Menú de Usuario
@@ -324,15 +341,22 @@ DELETE /api/user/{id}          # Eliminar
 - ✅ Eliminar categoría (confirmación)
 
 **2. Gestión de Productos**
-- ✅ Tabla con listado (ID, nombre, categoría, precio, stock, talla, estado)
+- ✅ Tabla con listado (ID, nombre, categoría, precio, stock, estado)
 - ✅ Crear nuevo producto (modal con todos los campos)
-- ✅ **Upload de imágenes con Laravel Storage** 🆕:
-  - Input type="file" para subir imágenes
+- ✅ **Upload de dos imágenes** 🆕:
+  - Imagen principal (obligatoria)
+  - Imagen secundaria (opcional)
   - Validación: jpeg, png, jpg, gif, webp (max 5MB)
   - Almacenamiento en storage/app/public/products
   - URL pública servida desde /storage/products/
-- ✅ Editar producto (modal con upload de imagen)
-- ✅ Eliminar producto (confirmación)
+  - Eliminación automática al actualizar
+- ✅ **Gestión de stock por talla** 🆕:
+  - Campo "Stock General": aplica mismo stock a todas las tallas
+  - 6 inputs individuales para stock por talla (XS-XXL)
+  - Grid responsive en el formulario
+  - Datos enviados como JSON al backend
+- ✅ Editar producto (modal con upload de imágenes y tallas)
+- ✅ Eliminar producto (confirmación + limpieza de imágenes)
 - ✅ Toggle activo/inactivo
 - ✅ Seleccionar categoría (dropdown)
 
@@ -1006,10 +1030,10 @@ docker exec tienda_backend composer dump-autoload
 ## 📞 Información de Contacto
 
 **Proyecto**: FVCKOFF E-commerce
-**Versión**: 1.0.3
+**Versión**: 1.0.4
 **Fecha**: Noviembre 2025
 **Stack**: Laravel 11 + Vanilla JS + Docker
-**Última Actualización**: 05/11/2025
+**Última Actualización**: 11/11/2025
 
 ### 🆕 Cambios en v1.0.3 (05/11/2025)
 - ✅ **CRÍTICO**: Corregido error fatal en sistema de checkout (ParseError en OrderController)
@@ -1017,6 +1041,219 @@ docker exec tienda_backend composer dump-autoload
 - ✅ **DevOps**: Solucionado problema de Docker build con enlaces simbólicos
 - ✅ Sistema de pedidos completamente funcional
 - ✅ Upload de imágenes de productos operativo
+
+### 🆕 Cambios en v1.0.4 (11/11/2025)
+- ✅ **Sistema de galería de imágenes**: Productos con dos fotos (principal y secundaria)
+- ✅ **Navegación de galería**: Botones prev/next e indicadores en modal de producto
+- ✅ **Sistema de tallas completo**: Selección de 6 tallas (XS, S, M, L, XL, XXL)
+- ✅ **Stock por talla**: Gestión independiente de stock para cada talla
+- ✅ **Panel Admin mejorado**: Campo "Stock General" y 6 inputs individuales por talla
+- ✅ **Display dinámico de stock**: Actualización en tiempo real al seleccionar tallas
+- ✅ **Tallas sin stock**: Botones rojos con texto tachado y deshabilitados
+- ✅ **Carrito por talla**: Mismo producto con diferentes tallas = items separados
+- ✅ **Limpieza de UI**: Eliminada talla de las tarjetas de producto
+- ✅ **Compatibilidad**: Productos sin tallas configuradas usan stock general
+
+---
+
+## 🎨 Sistema de Galería de Imágenes (v1.0.4)
+
+### Funcionalidad
+Cada producto puede tener dos imágenes:
+- **Imagen Principal**: Primera imagen que se muestra
+- **Imagen Secundaria**: Segunda imagen opcional
+
+### Navegación
+- **Botones**: Prev/Next para cambiar entre imágenes
+- **Indicadores**: Puntos en la parte inferior que muestran la imagen actual
+- **Click en indicador**: Navega directamente a esa imagen
+
+### Implementación Backend
+- Campo `image_secondary` en tabla `products`
+- ProductController maneja ambas imágenes en store/update/destroy
+- Eliminación automática de imágenes antiguas al actualizar
+
+### Implementación Frontend
+- Modal de producto con galería dinámica
+- Funciones: `changeProductImage()`, `setProductImage()`, `updateProductImage()`
+- CSS con botones glassmorphism y animaciones suaves
+
+**Archivos modificados**:
+- `backend/database/migrations/2025_11_11_104349_add_image_secondary_to_products_table.php`
+- `backend/app/Models/Product.php:17`
+- `backend/app/Http/Controllers/Api/ProductController.php:66-72, 145-158, 202-206`
+- `frontend/JS/app.js:329-335, 342-364, 464-501`
+- `frontend/CSS/styles.css:1101-1189`
+
+---
+
+## 👕 Sistema de Tallas y Stock por Talla (v1.0.4)
+
+### Concepto
+Cada producto puede tener stock específico para cada una de las 6 tallas disponibles: **XS, S, M, L, XL, XXL**
+
+### Base de Datos
+
+#### Tabla `product_sizes`
+```sql
+- id (bigint)
+- product_id (bigint, foreign key)
+- size (enum: XS, S, M, L, XL, XXL)
+- stock (integer)
+- timestamps
+- unique(product_id, size)
+- cascade delete
+```
+
+#### Modelo `ProductSize`
+- Relación belongsTo con Product
+- Fillable: product_id, size, stock
+
+#### Modelo `Product`
+- Relación hasMany con ProductSize
+- Método: `sizes()`
+
+### Panel Admin - Gestión de Stock
+
+#### Campo "Stock General"
+- Input numérico para aplicar el mismo stock a todas las tallas
+- Listener automático que replica el valor a todos los inputs de talla
+- Útil para productos nuevos con stock uniforme
+
+#### Inputs Individuales por Talla
+- Grid de 6 inputs (XS, S, M, L, XL, XXL)
+- Cada input tiene su propio valor de stock
+- Se envían como array JSON al backend: `[{size: 'M', stock: 10}, ...]`
+
+#### Validación Backend
+```php
+'sizes' => 'nullable|array',
+'sizes.*.size' => 'required|string|in:XS,S,M,L,XL,XXL',
+'sizes.*.stock' => 'required|integer|min:0',
+```
+
+### Frontend Store - Selección de Tallas
+
+#### Modal de Producto
+- Selector visual con 6 botones de talla
+- Cada botón muestra: **Talla + Stock disponible**
+- Estados:
+  - **Con stock**: Botón activo, muestra "X uds"
+  - **Sin stock**: Botón rojo con texto tachado, muestra "Agotado", deshabilitado
+
+#### Primera Talla Seleccionada
+- Auto-selección de la primera talla con stock > 0
+- Clase CSS `active` aplicada automáticamente
+- Stock inicial mostrado en el display
+
+#### Display Dinámico de Stock
+- Elemento `#productStockDisplay` actualizado en tiempo real
+- Al hacer click en cualquier talla, muestra su stock específico
+- Función `selectSize(size, stock)` gestiona la actualización
+
+### Sistema de Carrito por Talla
+
+#### Identificación de Items
+Los items del carrito se identifican por **ID de producto + Talla**:
+```javascript
+// Mismo producto con diferentes tallas = items separados
+cart.find(item => item.id === productId && item.size === size)
+```
+
+#### Validación de Stock
+Antes de añadir al carrito:
+1. Busca el stock de la talla específica en `product.sizes`
+2. Verifica que `stock > 0`
+3. Comprueba que cantidad a añadir ≤ stock disponible
+4. Muestra alerta específica si no hay stock: `"La talla M no tiene stock disponible"`
+
+#### Actualización de Cantidades
+- Botones +/- ahora incluyen parámetro de talla: `updateQuantity(id, size, change)`
+- Función `removeFromCart()` también filtra por talla
+- Display en carrito muestra: Nombre + "Talla X"
+
+### Compatibilidad con Productos Antiguos
+
+#### Productos sin Tallas Configuradas
+Si `product.sizes` está vacío o `product.sizes.length === 0`:
+- Todas las tallas muestran el stock general del producto
+- Comportamiento legacy mantenido
+- Migración gradual sin romper funcionalidad existente
+
+### Estilos CSS
+
+#### Tallas con Stock
+```css
+.size-option {
+  background: rgba(30, 30, 30, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  /* Glassmorphism + hover effects */
+}
+```
+
+#### Tallas sin Stock
+```css
+.size-option.out-of-stock {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: rgba(255, 68, 68, 0.4);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.size-option.out-of-stock .size-label {
+  text-decoration: line-through;
+}
+```
+
+### Flujo Completo
+
+1. **Admin crea/edita producto**:
+   - Opción A: Usar "Stock General" → todas las tallas con mismo stock
+   - Opción B: Configurar stock individual por talla
+   - Submit → JSON enviado al backend
+
+2. **Backend procesa**:
+   - Parsea JSON de tallas si viene como string
+   - Valida estructura del array
+   - Elimina tallas existentes (si update)
+   - Crea registros en `product_sizes` para cada talla
+
+3. **Cliente ve producto**:
+   - API incluye `->with('sizes')` en respuesta
+   - Frontend detecta si hay tallas configuradas
+   - Renderiza botones con stock específico o general
+
+4. **Cliente selecciona talla**:
+   - Click en botón de talla
+   - Función `selectSize(size, stock)` ejecutada
+   - Stock display actualizado: "X unidades"
+   - Variable global `window.selectedSizeStock` guardada
+
+5. **Cliente añade al carrito**:
+   - Verificación de stock de talla específica
+   - Item añadido con: id, name, price, **size**, quantity, stock
+   - Si ya existe item con mismo id+size → incrementa cantidad
+   - Si es talla diferente → nuevo item en carrito
+
+6. **Checkout**:
+   - Cada item con su talla se procesa independientemente
+   - Stock reducido por talla en backend (futura implementación)
+
+### Archivos Modificados
+
+**Backend**:
+- `backend/database/migrations/2025_11_11_122012_create_product_sizes_table.php`
+- `backend/app/Models/ProductSize.php` (nuevo)
+- `backend/app/Models/Product.php:24`
+- `backend/app/Http/Controllers/Api/ProductController.php:15-17, 23, 30-49, 77-94, 104-123, 165-183`
+
+**Frontend**:
+- `frontend/JS/admin.js` (formulario de producto, saveProduct)
+- `frontend/JS/app.js:337-348, 383-411, 440-464, 504-549, 580-605, 623-641`
+- `frontend/CSS/styles.css:1085-1099, size-stock-container, size-stock-item`
+
+**Admin HTML**:
+- `frontend/HTML/admin.html` (inputs de stock por talla)
 
 ---
 

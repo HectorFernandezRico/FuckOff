@@ -14,10 +14,12 @@ class Product extends Model
         'price',
         'active',
         'path',
+        'image_secondary',
         'size',
         'stock',
-        'price',
     ];
 
     public function category() { return $this->belongsTo(Category::class); }
+
+    public function sizes() { return $this->hasMany(ProductSize::class); }
 }

@@ -275,7 +275,7 @@ function renderProducts() {
     const tbody = document.getElementById('productsTableBody');
 
     if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No hay productos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">No hay productos</td></tr>';
         return;
     }
 
@@ -288,7 +288,6 @@ function renderProducts() {
                 <td>${category?.name || 'N/A'}</td>
                 <td>${parseFloat(prod.price).toFixed(2)}€</td>
                 <td>${prod.stock}</td>
-                <td>${prod.size}</td>
                 <td><span class="badge ${prod.active ? 'badge-active' : 'badge-inactive'}">${prod.active ? 'Activo' : 'Inactivo'}</span></td>
                 <td class="actions-cell">
                     <button class="btn-action btn-edit" onclick="openProductModal(${prod.id})">Editar</button>
@@ -320,37 +319,55 @@ function openProductModal(id = null) {
                 <label class="form-label">Descripción</label>
                 <textarea class="form-input" id="productDescription" rows="3">${product?.description || ''}</textarea>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Precio</label>
-                    <input type="number" step="0.01" class="form-input" id="productPrice" value="${product?.price || ''}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Stock</label>
-                    <input type="number" class="form-input" id="productStock" value="${product?.stock || ''}" required>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Precio</label>
+                <input type="number" step="0.01" class="form-input" id="productPrice" value="${product?.price || ''}" required>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Talla</label>
-                    <input type="text" class="form-input" id="productSize" value="${product?.size || ''}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Categoría</label>
-                    <select class="form-input" id="productCategory" required>
-                        <option value="">Seleccionar...</option>
-                        ${categories.map(cat => `
-                            <option value="${cat.id}" ${product?.category_id === cat.id ? 'selected' : ''}>
-                                ${cat.name}
-                            </option>
-                        `).join('')}
-                    </select>
+            <div class="form-group">
+                <label class="form-label">Categoría</label>
+                <select class="form-input" id="productCategory" required>
+                    <option value="">Seleccionar...</option>
+                    ${categories.map(cat => `
+                        <option value="${cat.id}" ${product?.category_id === cat.id ? 'selected' : ''}>
+                            ${cat.name}
+                        </option>
+                    `).join('')}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Stock General (para todas las tallas)</label>
+                <input type="number" class="form-input" id="productStockAll" placeholder="Dejar vacío para configurar por talla">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Stock por Talla</label>
+                <div class="size-stock-container">
+                    ${['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                        const sizeData = product?.sizes?.find(s => s.size === size);
+                        return `
+                        <div class="size-stock-item">
+                            <label class="size-stock-label">${size}</label>
+                            <input type="number"
+                                   class="form-input size-stock-input"
+                                   data-size="${size}"
+                                   value="${sizeData?.stock || 0}"
+                                   min="0"
+                                   placeholder="0">
+                        </div>
+                        `;
+                    }).join('')}
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Imagen</label>
+                <label class="form-label">Imagen Principal</label>
                 <input type="file" class="form-input" id="productImage" accept="image/*">
                 ${product?.path ? `<small style="color: #888; margin-top: 0.5rem; display: block;">Imagen actual: ${product.path.split('/').pop()}</small>` : ''}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Imagen Secundaria</label>
+                <input type="file" class="form-input" id="productImageSecondary" accept="image/*">
+                ${product?.image_secondary ? `<small style="color: #888; margin-top: 0.5rem; display: block;">Imagen actual: ${product.image_secondary.split('/').pop()}</small>` : ''}
             </div>
             <div class="form-group">
                 <label class="checkbox-label">
@@ -370,6 +387,19 @@ function openProductModal(id = null) {
         saveProduct(id);
     });
 
+    // Event listener para Stock General (aplicar a todas las tallas)
+    const stockAllInput = document.getElementById('productStockAll');
+    if (stockAllInput) {
+        stockAllInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value) {
+                document.querySelectorAll('.size-stock-input').forEach(input => {
+                    input.value = value;
+                });
+            }
+        });
+    }
+
     openModal();
 }
 
@@ -380,15 +410,37 @@ async function saveProduct(id = null) {
     formData.append('slug', document.getElementById('productSlug').value);
     formData.append('description', document.getElementById('productDescription').value);
     formData.append('price', document.getElementById('productPrice').value);
-    formData.append('stock', document.getElementById('productStock').value);
-    formData.append('size', document.getElementById('productSize').value);
     formData.append('category_id', document.getElementById('productCategory').value);
     formData.append('active', document.getElementById('productActive').checked ? '1' : '0');
 
-    // Agregar imagen si se seleccionó
+    // Recoger stock por talla
+    const sizeInputs = document.querySelectorAll('.size-stock-input');
+    const sizes = [];
+    let totalStock = 0;
+
+    sizeInputs.forEach(input => {
+        const size = input.dataset.size;
+        const stock = parseInt(input.value) || 0;
+        sizes.push({ size, stock });
+        totalStock += stock;
+    });
+
+    // Enviar stock total (suma de todas las tallas)
+    formData.append('stock', totalStock);
+
+    // Enviar array de tallas con stock como JSON
+    formData.append('sizes', JSON.stringify(sizes));
+
+    // Agregar imagen principal si se seleccionó
     const imageInput = document.getElementById('productImage');
     if (imageInput.files.length > 0) {
         formData.append('image', imageInput.files[0]);
+    }
+
+    // Agregar imagen secundaria si se seleccionó
+    const imageSecondaryInput = document.getElementById('productImageSecondary');
+    if (imageSecondaryInput.files.length > 0) {
+        formData.append('image_secondary', imageSecondaryInput.files[0]);
     }
 
     // Para PUT requests en Laravel con FormData, necesitamos usar POST con _method
