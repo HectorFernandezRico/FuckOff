@@ -15,17 +15,21 @@ class CartController extends Controller
     {
         $userId = $request->user()->id;
 
-        $cartItems = CartItem::with('product')
+        $cartItems = CartItem::with('product.sizes')
             ->where('user_id', $userId)
             ->get()
             ->map(function ($item) {
+                // Buscar stock de la talla específica
+                $sizeStock = $item->product->sizes->where('size', $item->size)->first();
+                $availableStock = $sizeStock ? $sizeStock->stock : $item->product->stock;
+
                 return [
                     'id' => $item->product_id,
                     'name' => $item->product->name,
                     'price' => $item->product->price,
-                    'size' => $item->product->size,
+                    'size' => $item->size,
                     'path' => $item->product->path,
-                    'stock' => $item->product->stock,
+                    'stock' => $availableStock,
                     'quantity' => $item->quantity,
                 ];
             });
@@ -40,21 +44,26 @@ class CartController extends Controller
 
         $data = $request->validate([
             'product_id' => 'required|exists:products,id',
+            'size' => 'required|string|in:XS,S,M,L,XL,XXL',
             'quantity' => 'required|integer|min:1',
         ]);
 
-        // Verificar stock disponible
-        $product = Product::findOrFail($data['product_id']);
-        if ($product->stock < $data['quantity']) {
+        // Verificar stock disponible de la talla específica
+        $product = Product::with('sizes')->findOrFail($data['product_id']);
+        $sizeStock = $product->sizes->where('size', $data['size'])->first();
+        $availableStock = $sizeStock ? $sizeStock->stock : $product->stock;
+
+        if ($availableStock < $data['quantity']) {
             return response()->json([
-                'error' => 'Stock insuficiente',
-                'available' => $product->stock
+                'error' => "Stock insuficiente para la talla {$data['size']}",
+                'available' => $availableStock
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // Buscar si ya existe en el carrito
+        // Buscar si ya existe en el carrito (producto + talla)
         $cartItem = CartItem::where('user_id', $userId)
             ->where('product_id', $data['product_id'])
+            ->where('size', $data['size'])
             ->first();
 
         if ($cartItem) {
@@ -62,10 +71,10 @@ class CartController extends Controller
             $newQuantity = $cartItem->quantity + $data['quantity'];
 
             // Verificar stock para nueva cantidad
-            if ($product->stock < $newQuantity) {
+            if ($availableStock < $newQuantity) {
                 return response()->json([
-                    'error' => 'Stock insuficiente',
-                    'available' => $product->stock,
+                    'error' => "Stock insuficiente para la talla {$data['size']}",
+                    'available' => $availableStock,
                     'current_in_cart' => $cartItem->quantity
                 ], Response::HTTP_BAD_REQUEST);
             }
@@ -77,6 +86,7 @@ class CartController extends Controller
             $cartItem = CartItem::create([
                 'user_id' => $userId,
                 'product_id' => $data['product_id'],
+                'size' => $data['size'],
                 'quantity' => $data['quantity'],
             ]);
         }
@@ -90,19 +100,24 @@ class CartController extends Controller
         $userId = $request->user()->id;
 
         $data = $request->validate([
+            'size' => 'required|string|in:XS,S,M,L,XL,XXL',
             'quantity' => 'required|integer|min:1',
         ]);
 
         $cartItem = CartItem::where('user_id', $userId)
             ->where('product_id', $productId)
+            ->where('size', $data['size'])
             ->firstOrFail();
 
-        // Verificar stock
-        $product = Product::findOrFail($productId);
-        if ($product->stock < $data['quantity']) {
+        // Verificar stock de la talla específica
+        $product = Product::with('sizes')->findOrFail($productId);
+        $sizeStock = $product->sizes->where('size', $data['size'])->first();
+        $availableStock = $sizeStock ? $sizeStock->stock : $product->stock;
+
+        if ($availableStock < $data['quantity']) {
             return response()->json([
-                'error' => 'Stock insuficiente',
-                'available' => $product->stock
+                'error' => "Stock insuficiente para la talla {$data['size']}",
+                'available' => $availableStock
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -117,13 +132,18 @@ class CartController extends Controller
     {
         $userId = $request->user()->id;
 
+        $data = $request->validate([
+            'size' => 'required|string|in:XS,S,M,L,XL,XXL',
+        ]);
+
         $cartItem = CartItem::where('user_id', $userId)
             ->where('product_id', $productId)
+            ->where('size', $data['size'])
             ->firstOrFail();
 
         $cartItem->delete();
 
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        return response()->json(['message' => 'Producto eliminado del carrito'], Response::HTTP_OK);
     }
 
     // Vaciar carrito completo
@@ -144,6 +164,7 @@ class CartController extends Controller
         $data = $request->validate([
             'items' => 'required|array',
             'items.*.id' => 'required|exists:products,id',
+            'items.*.size' => 'required|string|in:XS,S,M,L,XL,XXL',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -152,15 +173,22 @@ class CartController extends Controller
 
         // Agregar items del localStorage
         foreach ($data['items'] as $item) {
-            $product = Product::find($item['id']);
+            $product = Product::with('sizes')->find($item['id']);
 
-            // Verificar stock y crear item
-            if ($product && $product->stock >= $item['quantity']) {
-                CartItem::create([
-                    'user_id' => $userId,
-                    'product_id' => $item['id'],
-                    'quantity' => min($item['quantity'], $product->stock), // Ajustar si excede stock
-                ]);
+            if ($product) {
+                // Verificar stock de la talla específica
+                $sizeStock = $product->sizes->where('size', $item['size'])->first();
+                $availableStock = $sizeStock ? $sizeStock->stock : $product->stock;
+
+                // Verificar stock y crear item
+                if ($availableStock >= $item['quantity']) {
+                    CartItem::create([
+                        'user_id' => $userId,
+                        'product_id' => $item['id'],
+                        'size' => $item['size'],
+                        'quantity' => min($item['quantity'], $availableStock), // Ajustar si excede stock
+                    ]);
+                }
             }
         }
 

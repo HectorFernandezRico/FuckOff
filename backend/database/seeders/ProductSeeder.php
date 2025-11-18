@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductSize;
 use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
@@ -259,10 +260,31 @@ class ProductSeeder extends Seeder
             ],
         ];
 
-        foreach ($products as $product) {
-            Product::create($product);
+        $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+        foreach ($products as $productData) {
+            $product = Product::create($productData);
+
+            // Crear tallas para cada producto distribuyendo el stock total
+            $totalStock = $productData['stock'];
+            $stockPerSize = floor($totalStock / count($sizes));
+            $remainder = $totalStock % count($sizes);
+
+            foreach ($sizes as $index => $size) {
+                // Distribuir el stock equitativamente, y el resto lo añadimos a la talla M
+                $sizeStock = $stockPerSize;
+                if ($size === 'M' && $remainder > 0) {
+                    $sizeStock += $remainder;
+                }
+
+                ProductSize::create([
+                    'product_id' => $product->id,
+                    'size' => $size,
+                    'stock' => $sizeStock
+                ]);
+            }
         }
 
-        $this->command->info('Se han creado ' . count($categories) . ' categorías y ' . count($products) . ' productos exitosamente.');
+        $this->command->info('Se han creado ' . count($categories) . ' categorías y ' . count($products) . ' productos con sus tallas exitosamente.');
     }
 }

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envíos - FVCKOFF</title>
+    <link rel="stylesheet" href="/CSS/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/HTML/index.html" class="logo">FVCKOFF</a>
+            <div class="nav-icons">
+                <button class="icon-btn" id="cartBtn">
+                    🛒
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="icon-btn" id="userBtn">👤</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- User Menu -->
+    <div class="user-menu" id="userMenu">
+        <div id="userMenuContent"></div>
+    </div>
+
+    <!-- Shipping Section -->
+    <div class="info-page-container">
+        <div class="container">
+            <div class="info-page-header">
+                <h1 class="info-page-title">ENVÍOS</h1>
+                <div class="info-page-subtitle">Información sobre nuestros envíos</div>
+            </div>
+
+            <div class="info-page-content">
+                <section class="info-section">
+                    <h2 class="section-title">Métodos de Envío</h2>
+                    <div class="shipping-methods">
+                        <div class="shipping-card">
+                            <div class="shipping-icon">📦</div>
+                            <h3 class="shipping-title">Envío Estándar</h3>
+                            <p class="shipping-price">5€</p>
+                            <p class="shipping-time">3-5 días laborables</p>
+                            <p class="shipping-desc">Servicio de mensajería estándar. Entrega en horario laboral.</p>
+                        </div>
+                        <div class="shipping-card featured">
+                            <div class="badge-featured">Más Popular</div>
+                            <div class="shipping-icon">🚀</div>
+                            <h3 class="shipping-title">Envío Express</h3>
+                            <p class="shipping-price">8€</p>
+                            <p class="shipping-time">24-48 horas</p>
+                            <p class="shipping-desc">Entrega rápida con seguimiento prioritario.</p>
+                        </div>
+                        <div class="shipping-card">
+                            <div class="shipping-icon">🎁</div>
+                            <h3 class="shipping-title">Envío Gratis</h3>
+                            <p class="shipping-price">Gratis</p>
+                            <p class="shipping-time">Compras +75€</p>
+                            <p class="shipping-desc">Envío estándar gratuito en pedidos superiores a 75€.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-section">
+                    <h2 class="section-title">Zonas de Envío</h2>
+                    <div class="zones-grid">
+                        <div class="zone-card">
+                            <h3 class="zone-title">🇪🇸 España Peninsular</h3>
+                            <p class="zone-text">Envíos a toda la península. Tiempo estimado: 3-5 días laborables.</p>
+                        </div>
+                        <div class="zone-card">
+                            <h3 class="zone-title">🏝️ Islas Baleares y Canarias</h3>
+                            <p class="zone-text">Tiempo estimado: 5-7 días laborables. Pueden aplicarse costes adicionales.</p>
+                        </div>
+                        <div class="zone-card">
+                            <h3 class="zone-title">🇪🇺 Unión Europea</h3>
+                            <p class="zone-text">Envíos disponibles. Consulta costes y tiempos al finalizar la compra.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-section">
+                    <h2 class="section-title">Seguimiento de Pedidos</h2>
+                    <p class="section-text">
+                        Una vez que tu pedido haya sido enviado, recibirás un correo electrónico con el número de seguimiento
+                        y un enlace para rastrear tu paquete en tiempo real.
+                    </p>
+                    <p class="section-text">
+                        También puedes consultar el estado de tus pedidos en tu perfil de usuario, en la sección "Mis Pedidos".
+                    </p>
+                </section>
+
+                <section class="info-section">
+                    <h2 class="section-title">Tiempos de Procesamiento</h2>
+                    <p class="section-text">
+                        Todos los pedidos se procesan en un plazo de <strong>24-48 horas laborables</strong> después de la confirmación del pago.
+                        Los pedidos realizados durante el fin de semana se procesarán el siguiente día laborable.
+                    </p>
+                </section>
+
+                <section class="info-section">
+                    <h2 class="section-title">Preguntas Frecuentes</h2>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <h3 class="faq-question">¿Puedo cambiar la dirección de envío después de hacer el pedido?</h3>
+                            <p class="faq-answer">
+                                Si tu pedido aún no ha sido enviado, puedes contactarnos para modificar la dirección.
+                                Una vez enviado, no será posible realizar cambios.
+                            </p>
+                        </div>
+                        <div class="faq-item">
+                            <h3 class="faq-question">¿Qué hago si mi pedido no llega en el plazo estimado?</h3>
+                            <p class="faq-answer">
+                                Si tu pedido no llega en el tiempo estimado, contacta con nuestro servicio de atención al cliente
+                                con tu número de pedido y te ayudaremos a localizarlo.
+                            </p>
+                        </div>
+                        <div class="faq-item">
+                            <h3 class="faq-question">¿Hacéis envíos internacionales?</h3>
+                            <p class="faq-answer">
+                                Actualmente realizamos envíos a España y la Unión Europea. Estamos trabajando para ampliar
+                                nuestras zonas de envío próximamente.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-section info-cta">
+                    <h2 class="section-title">¿Necesitas Ayuda?</h2>
+                    <p class="section-text">
+                        Si tienes alguna duda sobre los envíos, no dudes en contactarnos.
+                    </p>
+                    <a href="/HTML/contact.html" class="btn-primary btn-large">Contactar</a>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4 class="footer-title">FVCKOFF</h4>
+                    <p class="footer-text">Premium streetwear para aquellos que se atreven a ser diferentes.</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Enlaces</h4>
+                    <a href="/HTML/about.html" class="footer-link">Sobre Nosotros</a>
+                    <a href="/HTML/shipping.html" class="footer-link">Envíos</a>
+                    <a href="/HTML/returns.html" class="footer-link">Devoluciones</a>
+                    <a href="/HTML/contact.html" class="footer-link">Contacto</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Legal</h4>
+                    <a href="/HTML/privacy.html" class="footer-link">Política de Privacidad</a>
+                    <a href="/HTML/terms.html" class="footer-link">Términos y Condiciones</a>
+                    <a href="/HTML/cookies.html" class="footer-link">Cookies</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Síguenos</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link">Instagram</a>
+                        <a href="#" class="social-link">Twitter</a>
+                        <a href="#" class="social-link">TikTok</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FVCKOFF. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Carrito</h3>
+            <button class="close-cart" id="closeCart">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span class="total-price" id="totalPrice">0.00€</span>
+            </div>
+            <button class="btn-primary" id="checkoutBtn">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script src="/JS/app.js"></script>
+</body>
+</html>

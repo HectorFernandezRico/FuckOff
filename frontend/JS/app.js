@@ -301,8 +301,8 @@ function renderProducts(products) {
                 <div class="product-footer">
                     <span class="product-price">${parseFloat(product.price).toFixed(2)}€</span>
                 </div>
-                <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''}>
-                    ${product.stock === 0 ? 'Agotado' : 'Añadir al Carrito'}
+                <button class="btn-add-cart" onclick="event.stopPropagation(); openProductModal(${product.id})" ${product.stock === 0 ? 'disabled' : ''}>
+                    ${product.stock === 0 ? 'Agotado' : 'Seleccionar Talla'}
                 </button>
             </div>
         </div>
@@ -404,7 +404,6 @@ function openProductModal(productId) {
                                     data-stock="${stock}"
                                     ${!hasStock ? 'disabled' : ''}>
                                 <span class="size-label">${size}</span>
-                                <span class="size-stock-label">${hasStock ? stock + ' uds' : 'Agotado'}</span>
                             </button>
                             `;
                         }).join('')}
@@ -475,7 +474,7 @@ function selectSize(size, stock) {
     }
 }
 
-function addToCartWithSize(productId) {
+async function addToCartWithSize(productId) {
     const selectedSize = window.selectedSize || document.querySelector('.size-option.active')?.dataset.size;
 
     if (!selectedSize) {
@@ -483,7 +482,10 @@ function addToCartWithSize(productId) {
         return;
     }
 
-    addToCart(productId, selectedSize);
+    await addToCart(productId, selectedSize);
+
+    // Cerrar el modal después de añadir al carrito
+    closeProductModal();
 }
 
 // Gallery navigation functions
@@ -536,7 +538,8 @@ async function addToCart(productId, selectedSize = null) {
 
     // Verificar stock de la talla específica
     const sizeData = product.sizes?.find(s => s.size === size);
-    const availableStock = sizeData ? sizeData.stock : 0;
+    // Si no hay datos de talla (producto sin tallas configuradas), usar stock general
+    const availableStock = sizeData ? sizeData.stock : (product.stock || 0);
 
     if (availableStock === 0) {
         alert(`La talla ${size} no tiene stock disponible`);
@@ -585,6 +588,7 @@ async function addToCart(productId, selectedSize = null) {
             },
             body: JSON.stringify({
                 product_id: productId,
+                size: size,
                 quantity: 1
             })
         });
@@ -603,31 +607,95 @@ async function addToCart(productId, selectedSize = null) {
     }
 }
 
-function removeFromCart(productId, size) {
-    cart = cart.filter(item => !(item.id === productId && item.size === size));
-    saveCart();
-    updateCartUI();
+async function removeFromCart(productId, size) {
+    const token = localStorage.getItem('auth_token');
+
+    // Si está autenticado, eliminar del backend
+    if (token) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ size: size })
+            });
+
+            if (response.ok) {
+                // Recargar carrito del backend después de eliminar
+                await loadCartFromBackend();
+                updateCartUI();
+                showNotification('Producto eliminado del carrito');
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Error al eliminar del carrito');
+            }
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            alert('Error al eliminar del carrito');
+        }
+    } else {
+        // Si no está autenticado, solo actualizar localStorage
+        cart = cart.filter(item => !(item.id === productId && item.size === size));
+        saveCart();
+        updateCartUI();
+    }
 }
 
-function updateQuantity(productId, size, change) {
+async function updateQuantity(productId, size, change) {
     const item = cart.find(item => item.id === productId && item.size === size);
     if (!item) return;
 
     const newQuantity = item.quantity + change;
 
-    if (newQuantity <= 0) {
-        removeFromCart(productId, size);
+    // No permitir menos de 1
+    if (newQuantity < 1) {
         return;
     }
 
+    // No permitir más del stock disponible
     if (newQuantity > item.stock) {
-        alert(`No hay más stock disponible para la talla ${size}`);
+        alert(`No hay más stock disponible para la talla ${size}. Stock máximo: ${item.stock}`);
         return;
     }
 
-    item.quantity = newQuantity;
-    saveCart();
-    updateCartUI();
+    const token = localStorage.getItem('auth_token');
+
+    // Si está autenticado, actualizar en backend
+    if (token) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    size: size,
+                    quantity: newQuantity
+                })
+            });
+
+            if (response.ok) {
+                await loadCartFromBackend();
+                updateCartUI();
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Error al actualizar cantidad');
+            }
+        } catch (error) {
+            console.error('Error updating quantity:', error);
+            alert('Error al actualizar cantidad');
+        }
+    } else {
+        // Si no está autenticado, solo actualizar localStorage
+        item.quantity = newQuantity;
+        saveCart();
+        updateCartUI();
+    }
 }
 
 function saveCart() {
@@ -656,10 +724,19 @@ function updateCartUI() {
                 <div class="cart-item-size">Talla ${item.size}</div>
                 <div class="cart-item-footer">
                     <div class="cart-item-price">${(item.price * item.quantity).toFixed(2)}€</div>
-                    <div class="cart-item-quantity">
-                        <button class="btn-qty" onclick="updateQuantity(${item.id}, '${item.size}', -1)">-</button>
-                        <span>${item.quantity}</span>
-                        <button class="btn-qty" onclick="updateQuantity(${item.id}, '${item.size}', 1)">+</button>
+                    <div class="cart-item-actions">
+                        <div class="cart-item-quantity">
+                            <button class="btn-qty" onclick="updateQuantity(${item.id}, '${item.size}', -1)" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
+                            <span>${item.quantity}</span>
+                            <button class="btn-qty" onclick="updateQuantity(${item.id}, '${item.size}', 1)" ${item.quantity >= item.stock ? 'disabled' : ''}>+</button>
+                        </div>
+                        <button class="btn-remove-item" onclick="removeFromCart(${item.id}, '${item.size}')" title="Eliminar del carrito">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>

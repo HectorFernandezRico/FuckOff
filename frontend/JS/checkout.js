@@ -3,8 +3,9 @@ const API_BASE_URL = 'http://localhost:8000/api';
 
 // State
 let cart = [];
-const SHIPPING_COST = 5.00;
+let selectedShippingCost = 5.00; // Default: Standard shipping
 const TAX_RATE = 0.21; // IVA 21%
+const FREE_SHIPPING_THRESHOLD = 75.00;
 
 // DOM Elements
 const summaryItems = document.getElementById('summaryItems');
@@ -15,6 +16,9 @@ const summaryShipping = document.getElementById('summaryShipping');
 const summaryTotal = document.getElementById('summaryTotal');
 const completeOrderBtn = document.getElementById('completeOrderBtn');
 const checkoutForm = document.getElementById('checkoutForm');
+const freeShippingOption = document.getElementById('freeShippingOption');
+const amountForFreeShipping = document.getElementById('amountForFreeShipping');
+const freeShippingNote = document.getElementById('freeShippingNote');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadCheckoutData();
     loadUserData();
+    setupShippingOptions();
 
     completeOrderBtn.addEventListener('click', handleCompleteOrder);
 });
@@ -63,12 +68,78 @@ function loadCheckoutData() {
     const tax = totalWithTax - subtotal;
 
     // Total final = productos (con IVA incluido) + envío
-    const total = totalWithTax + SHIPPING_COST;
+    const total = totalWithTax + selectedShippingCost;
 
     summarySubtotal.textContent = `${subtotal.toFixed(2)}€`;
     summaryTax.textContent = `${tax.toFixed(2)}€`;
     summaryProductsTotal.textContent = `${totalWithTax.toFixed(2)}€`;
-    summaryShipping.textContent = `${SHIPPING_COST.toFixed(2)}€`;
+    summaryShipping.textContent = selectedShippingCost === 0 ? 'Gratis' : `${selectedShippingCost.toFixed(2)}€`;
+    summaryTotal.textContent = `${total.toFixed(2)}€`;
+}
+
+function setupShippingOptions() {
+    const shippingRadios = document.querySelectorAll('input[name="shippingMethod"]');
+
+    // Check if free shipping is available
+    const totalWithTax = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const freeShippingInput = document.querySelector('input[value="free"]');
+    const standardShippingInput = document.querySelector('input[value="standard"]');
+    const expressShippingInput = document.querySelector('input[value="express"]');
+    const standardShippingOption = document.getElementById('standardShippingOption');
+    const expressShippingOption = document.getElementById('expressShippingOption');
+
+    if (totalWithTax >= FREE_SHIPPING_THRESHOLD) {
+        // Enable free shipping and disable only standard shipping
+        freeShippingInput.disabled = false;
+        freeShippingInput.checked = true;
+        freeShippingOption.style.cursor = 'pointer';
+        freeShippingNote.style.display = 'none';
+
+        // Disable only standard shipping, keep express available
+        standardShippingInput.disabled = true;
+        standardShippingOption.style.cursor = 'not-allowed';
+
+        // Keep express shipping enabled
+        expressShippingInput.disabled = false;
+        expressShippingOption.style.cursor = 'pointer';
+
+        // Update shipping cost to free
+        selectedShippingCost = 0;
+        updateOrderSummary();
+    } else {
+        // Show amount needed for free shipping
+        const amountNeeded = FREE_SHIPPING_THRESHOLD - totalWithTax;
+        amountForFreeShipping.textContent = `${amountNeeded.toFixed(2)}€`;
+        freeShippingNote.style.display = 'block';
+
+        // Enable standard and express shipping
+        standardShippingInput.disabled = false;
+        expressShippingInput.disabled = false;
+        standardShippingOption.style.cursor = 'pointer';
+        expressShippingOption.style.cursor = 'pointer';
+    }
+
+    // Add event listeners to shipping method radios
+    shippingRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            selectedShippingCost = parseFloat(e.target.dataset.price);
+            updateOrderSummary();
+        });
+    });
+}
+
+function updateOrderSummary() {
+    // Calculate totals (precio YA incluye IVA)
+    const totalWithTax = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Extraer IVA del precio (precio ya incluye IVA)
+    const subtotal = totalWithTax / (1 + TAX_RATE);
+    const tax = totalWithTax - subtotal;
+
+    // Total final = productos (con IVA incluido) + envío
+    const total = totalWithTax + selectedShippingCost;
+
+    summaryShipping.textContent = selectedShippingCost === 0 ? 'Gratis' : `${selectedShippingCost.toFixed(2)}€`;
     summaryTotal.textContent = `${total.toFixed(2)}€`;
 }
 
@@ -104,6 +175,10 @@ async function handleCompleteOrder() {
     completeOrderBtn.textContent = 'Procesando...';
 
     try {
+        // Get selected shipping method
+        const selectedShippingMethod = document.querySelector('input[name="shippingMethod"]:checked');
+        const shippingMethod = selectedShippingMethod ? selectedShippingMethod.value : 'standard';
+
         // Prepare order data
         const orderData = {
             user_id: JSON.parse(localStorage.getItem('user')).id,
@@ -118,7 +193,9 @@ async function handleCompleteOrder() {
                 city,
                 zipCode,
                 country
-            }
+            },
+            shipping_method: shippingMethod,
+            shipping_cost: selectedShippingCost
         };
 
         const response = await fetch(`${API_BASE_URL}/order`, {
@@ -149,6 +226,6 @@ async function handleCompleteOrder() {
     } catch (error) {
         alert('Error al procesar el pedido: ' + error.message);
         completeOrderBtn.disabled = false;
-        completeOrderBtn.textContent = 'Completar Pedido';
+        completeOrderBtn.textContent = 'Finalizar Pedido';
     }
 }

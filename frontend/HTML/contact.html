@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - FVCKOFF</title>
+    <link rel="stylesheet" href="/CSS/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/HTML/index.html" class="logo">FVCKOFF</a>
+            <div class="nav-icons">
+                <button class="icon-btn" id="cartBtn">
+                    🛒
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="icon-btn" id="userBtn">👤</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- User Menu -->
+    <div class="user-menu" id="userMenu">
+        <div id="userMenuContent"></div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="info-page-container">
+        <div class="container">
+            <div class="info-page-header">
+                <h1 class="info-page-title">CONTACTO</h1>
+                <div class="info-page-subtitle">Estamos aquí para ayudarte</div>
+            </div>
+
+            <div class="contact-content">
+                <div class="contact-info-section">
+                    <h2 class="section-title">Información de Contacto</h2>
+                    <div class="contact-methods">
+                        <div class="contact-card">
+                            <div class="contact-icon">📧</div>
+                            <h3 class="contact-title">Email</h3>
+                            <p class="contact-detail">info@fvckoff.com</p>
+                            <p class="contact-desc">Respuesta en 24-48 horas</p>
+                        </div>
+                        <div class="contact-card">
+                            <div class="contact-icon">📞</div>
+                            <h3 class="contact-title">Teléfono</h3>
+                            <p class="contact-detail">+34 910 123 456</p>
+                            <p class="contact-desc">Lun-Vie: 10:00 - 18:00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form-section">
+                    <h2 class="section-title">Envíanos un Mensaje</h2>
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="name">Nombre *</label>
+                                <input type="text" id="name" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="email">Email *</label>
+                                <input type="email" id="email" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="subject">Asunto *</label>
+                            <select id="subject" class="form-input" required>
+                                <option value="">Selecciona un asunto</option>
+                                <option value="pedido">Consulta sobre pedido</option>
+                                <option value="producto">Información de producto</option>
+                                <option value="devolucion">Devolución o cambio</option>
+                                <option value="tecnico">Problema técnico</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="orderNumber">Número de Pedido (opcional)</label>
+                            <input type="text" id="orderNumber" class="form-input" placeholder="Ej: #12345">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="message">Mensaje *</label>
+                            <textarea id="message" class="form-input form-textarea" rows="6" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary btn-large">Enviar Mensaje</button>
+                    </form>
+                </div>
+
+                <div class="info-section">
+                    <h2 class="section-title">Horario de Atención al Cliente</h2>
+                    <p class="section-text" style="margin-bottom: 1.5rem;">Horario de atención telefónica y respuesta a emails:</p>
+                    <div class="schedule-grid">
+                        <div class="schedule-item">
+                            <span class="schedule-day">Lunes - Viernes</span>
+                            <span class="schedule-time">10:00 - 18:00</span>
+                        </div>
+                        <div class="schedule-item">
+                            <span class="schedule-day">Sábados</span>
+                            <span class="schedule-time">Cerrado</span>
+                        </div>
+                        <div class="schedule-item">
+                            <span class="schedule-day">Domingos y Festivos</span>
+                            <span class="schedule-time">Cerrado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2 class="section-title">Preguntas Frecuentes</h2>
+                    <p class="section-text">
+                        Antes de contactarnos, te recomendamos revisar nuestras secciones de
+                        <a href="/HTML/shipping.html" class="inline-link">Envíos</a> y
+                        <a href="/HTML/returns.html" class="inline-link">Devoluciones</a>,
+                        donde encontrarás respuesta a las consultas más comunes.
+                    </p>
+                </div>
+
+                <div class="info-section">
+                    <h2 class="section-title">Síguenos en Redes Sociales</h2>
+                    <p class="section-text">
+                        También puedes contactarnos a través de nuestras redes sociales. Respondemos mensajes directos
+                        y comentarios de forma regular.
+                    </p>
+                    <div class="social-links-large">
+                        <a href="#" class="social-link-large">
+                            <span class="social-icon">📷</span>
+                            <span class="social-name">Instagram</span>
+                            <span class="social-handle">@fvckoff_official</span>
+                        </a>
+                        <a href="#" class="social-link-large">
+                            <span class="social-icon">🐦</span>
+                            <span class="social-name">Twitter</span>
+                            <span class="social-handle">@fvckoff_store</span>
+                        </a>
+                        <a href="#" class="social-link-large">
+                            <span class="social-icon">🎵</span>
+                            <span class="social-name">TikTok</span>
+                            <span class="social-handle">@fvckoff</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4 class="footer-title">FVCKOFF</h4>
+                    <p class="footer-text">Premium streetwear para aquellos que se atreven a ser diferentes.</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Enlaces</h4>
+                    <a href="/HTML/about.html" class="footer-link">Sobre Nosotros</a>
+                    <a href="/HTML/shipping.html" class="footer-link">Envíos</a>
+                    <a href="/HTML/returns.html" class="footer-link">Devoluciones</a>
+                    <a href="/HTML/contact.html" class="footer-link">Contacto</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Legal</h4>
+                    <a href="/HTML/privacy.html" class="footer-link">Política de Privacidad</a>
+                    <a href="/HTML/terms.html" class="footer-link">Términos y Condiciones</a>
+                    <a href="/HTML/cookies.html" class="footer-link">Cookies</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Síguenos</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link">Instagram</a>
+                        <a href="#" class="social-link">Twitter</a>
+                        <a href="#" class="social-link">TikTok</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FVCKOFF. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Carrito</h3>
+            <button class="close-cart" id="closeCart">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span class="total-price" id="totalPrice">0.00€</span>
+            </div>
+            <button class="btn-primary" id="checkoutBtn">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script src="/JS/app.js"></script>
+    <script src="/JS/contact.js"></script>
+</body>
+</html>

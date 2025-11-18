@@ -1030,10 +1030,10 @@ docker exec tienda_backend composer dump-autoload
 ## 📞 Información de Contacto
 
 **Proyecto**: FVCKOFF E-commerce
-**Versión**: 1.0.4
+**Versión**: 1.0.5
 **Fecha**: Noviembre 2025
 **Stack**: Laravel 11 + Vanilla JS + Docker
-**Última Actualización**: 11/11/2025
+**Última Actualización**: 18/11/2025
 
 ### 🆕 Cambios en v1.0.3 (05/11/2025)
 - ✅ **CRÍTICO**: Corregido error fatal en sistema de checkout (ParseError en OrderController)
@@ -1053,6 +1053,708 @@ docker exec tienda_backend composer dump-autoload
 - ✅ **Carrito por talla**: Mismo producto con diferentes tallas = items separados
 - ✅ **Limpieza de UI**: Eliminada talla de las tarjetas de producto
 - ✅ **Compatibilidad**: Productos sin tallas configuradas usan stock general
+
+### 🆕 Cambios en v1.0.5 (18/11/2025)
+- ✅ **Páginas informativas y legales completas**:
+  - Sobre Nosotros (about.html) - Filosofía de marca con 4 pilares
+  - Envíos (shipping.html) - 3 métodos de envío, zonas, tracking
+  - Devoluciones (returns.html) - Política de 30 días, proceso paso a paso
+  - Contacto (contact.html) - Formulario, horarios, redes sociales
+  - Privacidad (privacy.html) - GDPR compliant con 11 secciones
+  - Términos (terms.html) - 14 secciones de términos y condiciones
+  - Cookies (cookies.html) - Política de cookies con gestión por navegador
+- ✅ **Footer actualizado**: Enlaces funcionales a todas las nuevas páginas
+- ✅ **Eliminación de tienda física**: Actualizado todo el contenido para reflejar modelo 100% online
+- ✅ **Sistema de selección de método de envío en checkout**:
+  - 3 opciones: Estándar (5€), Express (8€), Gratis (+75€)
+  - Selección dinámica con actualización de precio en tiempo real
+  - Badge "Más Popular" en Envío Express
+  - Habilitación automática de envío gratis al superar 75€
+  - Deshabilitación de envío estándar al alcanzar envío gratis
+  - Display de "Añade X€ más para envío gratis"
+- ✅ **Mejoras en carrito de compras**:
+  - Límite mínimo de 1 unidad por producto
+  - Límite máximo según stock disponible
+  - Botón de papelera para eliminar productos
+  - Sincronización completa con backend
+  - Botones deshabilitados con estados visuales
+- ✅ **Optimización de UX**:
+  - Botón "Añadir al Carrito" → "Seleccionar Talla" que abre modal
+  - Cierre automático de modal después de añadir al carrito
+  - Botón "Volver" → "Seguir Comprando" en checkout
+  - Botón "Completar Pedido" → "Finalizar Pedido"
+- ✅ **Seeders mejorados**: Auto-creación de tallas con stock distribuido para todos los productos
+- ✅ **580+ líneas de CSS**: Estilos completos para páginas legales e informativas con glassmorphism
+
+---
+
+## 📄 Páginas Informativas y Legales (v1.0.5)
+
+### Sobre Nosotros (`about.html`)
+
+**Contenido**:
+- Historia de la marca FVCKOFF
+- Para quién está dirigida (público joven, urbano e inconformista)
+- Filosofía de marca con 4 pilares:
+  - 💥 Actitud Sin Disculpas
+  - 🔥 Calidad Premium
+  - 🎨 Diseños Únicos
+  - 🌍 Comunidad Auténtica
+- Compromiso con sostenibilidad y producción ética
+- CTA para unirse a la comunidad
+
+**Diseño**: Hero section + glassmorphism cards con iconos
+
+### Envíos (`shipping.html`)
+
+**Métodos de envío**:
+1. **Envío Estándar** - 5€ (3-5 días laborables)
+2. **Envío Express** - 8€ (24-48 horas) - Badge "Más Popular"
+3. **Envío Gratis** - Compras +75€ (3-5 días laborables)
+
+**Zonas**:
+- 🇪🇸 España Peninsular (3-5 días)
+- 🏝️ Islas Baleares y Canarias (5-7 días)
+- 🇪🇺 Unión Europea (consultar)
+
+**Información adicional**:
+- Seguimiento de pedidos
+- Tiempos de procesamiento
+- FAQ sobre envíos
+
+### Devoluciones (`returns.html`)
+
+**Política**:
+- 30 días desde recepción del producto
+- Producto en perfectas condiciones
+- Etiquetas y embalaje original
+- Gastos de devolución a cargo del cliente
+
+**Proceso en 4 pasos**:
+1. Contactar con atención al cliente
+2. Recibir autorización e instrucciones
+3. Enviar producto con seguimiento
+4. Recibir reembolso (5-10 días hábiles)
+
+**Productos no retornables**:
+- Artículos en oferta final
+- Productos personalizados
+- Productos usados o dañados
+
+### Contacto (`contact.html`)
+
+**Métodos de contacto**:
+- 📧 Email: info@fvckoff.com (respuesta 24-48h)
+- 📞 Teléfono: +34 910 123 456 (Lun-Vie 10:00-18:00)
+
+**Formulario de contacto**:
+- Campos: Nombre, Email, Asunto, Nº Pedido (opcional), Mensaje
+- Validación completa con JavaScript
+- Handler en `contact.js`
+
+**Horario de atención**:
+- Lunes a Viernes: 10:00 - 18:00
+- Sábados y Domingos: Cerrado
+
+**Redes sociales**:
+- Instagram: @fvckoff_official
+- Twitter: @fvckoff_store
+- TikTok: @fvckoff
+
+### Privacidad (`privacy.html`)
+
+**11 Secciones GDPR Compliant**:
+1. Información General
+2. Datos que Recopilamos (personales y automáticos)
+3. Uso de tus Datos
+4. Protección de Datos (cifrado SSL)
+5. Compartir Información (terceros necesarios)
+6. Tus Derechos (acceso, rectificación, supresión, portabilidad)
+7. Cookies (referencia a política de cookies)
+8. Retención de Datos
+9. Menores de Edad (no dirigido a -16 años)
+10. Cambios en esta Política
+11. Contacto (privacidad@fvckoff.com)
+
+### Términos y Condiciones (`terms.html`)
+
+**14 Secciones**:
+1. Información General
+2. Datos del Titular (nombre comercial, email, teléfono)
+3. Objeto (condiciones de compra)
+4. Proceso de Compra (registro, pedidos, precios con IVA)
+5. Pagos (tarjetas, PayPal, transferencia)
+6. Envíos y Entregas
+7. Derecho de Desistimiento (30 días)
+8. Garantías (2 años legales)
+9. Propiedad Intelectual
+10. Responsabilidad
+11. Protección de Datos
+12. Modificaciones
+13. Legislación y Jurisdicción (española, tribunales de Madrid)
+14. Contacto
+
+### Cookies (`cookies.html`)
+
+**Secciones**:
+- Qué son las Cookies
+- Tipos de Cookies:
+  - Esenciales (auth_token, cart)
+  - De Preferencias
+  - Analíticas (Google Analytics)
+  - De Marketing
+- Finalidad de las Cookies
+- Cookies de Terceros
+- Gestión de Cookies (por navegador)
+- Enlaces de ayuda: Chrome, Firefox, Safari, Edge
+- Consecuencias de Desactivar Cookies
+- Actualización de la Política
+- Más Información (referencia a privacidad)
+
+**Tabla de cookies**:
+| Cookie | Descripción | Duración |
+|--------|-------------|----------|
+| auth_token | Mantiene sesión activa | Hasta cerrar sesión |
+| cart | Almacena productos del carrito | 30 días |
+
+### Diseño Visual Común
+
+**Estilos compartidos** (`styles.css` líneas 2489-3067):
+- `.legal-page-container` / `.info-page-container` - Contenedor principal
+- `.legal-page-header` / `.info-page-header` - Headers con título y fecha
+- `.legal-section` / `.info-section` - Secciones con glassmorphism
+- `.legal-title` / `.section-title` - Títulos H2
+- `.legal-subtitle` / `.section-subtitle` - Subtítulos H3
+- `.legal-list` - Listas con checkmarks
+- `.contact-info-box` - Caja de información de contacto
+- `.shipping-card` - Tarjetas de métodos de envío
+- `.return-step` - Pasos numerados con círculos
+- `.contact-form` - Formulario estilizado
+- `.cookie-table` - Tabla de cookies
+- `.browser-links` - Enlaces a navegadores
+
+**Responsive**: Breakpoints en 768px para adaptación móvil
+
+### Archivos Creados
+
+**HTML** (7 nuevos archivos):
+- `frontend/HTML/about.html`
+- `frontend/HTML/shipping.html`
+- `frontend/HTML/returns.html`
+- `frontend/HTML/contact.html`
+- `frontend/HTML/privacy.html`
+- `frontend/HTML/terms.html`
+- `frontend/HTML/cookies.html`
+
+**JavaScript** (1 nuevo archivo):
+- `frontend/JS/contact.js` - Handler del formulario de contacto
+
+**CSS**:
+- `frontend/CSS/styles.css` - 580+ líneas añadidas (líneas 2489-3199)
+
+**Footer actualizado**:
+- `frontend/HTML/index.html` - Enlaces del footer actualizados
+- Todas las páginas nuevas tienen footer con enlaces correctos
+
+---
+
+## 🚚 Sistema de Métodos de Envío en Checkout (v1.0.5)
+
+### Implementación
+
+El checkout ahora permite al usuario seleccionar el método de envío con actualización dinámica del precio total.
+
+### Opciones de Envío
+
+#### 1. Envío Estándar
+- **Precio**: 5€
+- **Tiempo**: 3-5 días laborables
+- **Estado por defecto**: Seleccionado si pedido < 75€
+- **Estado con pedido ≥75€**: **Deshabilitado** (no tiene sentido pagar si hay envío gratis)
+
+#### 2. Envío Express
+- **Precio**: 8€
+- **Tiempo**: 24-48 horas
+- **Badge**: "Más Popular"
+- **Estado**: Siempre disponible (incluso con pedido ≥75€)
+- **Justificación**: Cliente puede preferir entrega rápida aunque pague
+
+#### 3. Envío Gratis
+- **Precio**: 0€
+- **Requisito**: Pedido ≥ 75€
+- **Estado por defecto**: Deshabilitado con mensaje "Añade X€ más"
+- **Al alcanzar 75€**:
+  - Se habilita automáticamente
+  - Se selecciona automáticamente
+  - Muestra "Gratis" en lugar de "0.00€"
+  - Oculta mensaje de "Añade X€ más"
+
+### HTML (`checkout.html`)
+
+**Estructura añadida** (líneas 72-122):
+```html
+<div class="checkout-card">
+    <h3 class="checkout-card-title">Método de Envío</h3>
+    <div class="shipping-options">
+        <label class="shipping-option" id="standardShippingOption">
+            <input type="radio" name="shippingMethod" value="standard" data-price="5" checked>
+            <div class="shipping-option-content">
+                <div class="shipping-option-header">
+                    <span class="shipping-option-icon">📦</span>
+                    <div class="shipping-option-info">
+                        <span class="shipping-option-name">Envío Estándar</span>
+                        <span class="shipping-option-time">3-5 días laborables</span>
+                    </div>
+                    <span class="shipping-option-price">5.00€</span>
+                </div>
+            </div>
+        </label>
+        <!-- Express y Gratis con estructura similar -->
+    </div>
+</div>
+```
+
+**Elementos dinámicos**:
+- `#standardShippingOption` - Contenedor opción estándar
+- `#expressShippingOption` - Contenedor opción express
+- `#freeShippingOption` - Contenedor opción gratis
+- `#freeShippingNote` - Mensaje "Añade X€ más"
+- `#amountForFreeShipping` - Span con cantidad faltante
+
+### JavaScript (`checkout.js`)
+
+**Variables de estado**:
+```javascript
+let selectedShippingCost = 5.00; // Default: Standard
+const FREE_SHIPPING_THRESHOLD = 75.00;
+```
+
+**Función `setupShippingOptions()`** (líneas 80-127):
+- Calcula total del carrito
+- Verifica si alcanza 75€ para envío gratis
+- **Si total ≥ 75€**:
+  - Habilita envío gratis y lo selecciona
+  - Deshabilita envío estándar
+  - Mantiene envío express disponible
+  - Oculta mensaje "Añade X€"
+  - Actualiza costo a 0€
+- **Si total < 75€**:
+  - Habilita envío estándar y express
+  - Deshabilita envío gratis
+  - Muestra "Añade X€ más para envío gratis"
+
+**Función `updateOrderSummary()`** (líneas 129-141):
+- Recalcula totales con costo de envío seleccionado
+- Actualiza display de envío (muestra "Gratis" si es 0€)
+- Actualiza total final
+
+**Listeners**:
+- Event listeners en todos los radio buttons
+- Al cambiar selección → actualiza `selectedShippingCost` → llama `updateOrderSummary()`
+
+**Datos enviados al backend** (líneas 156-176):
+```javascript
+const orderData = {
+    // ... otros campos
+    shipping_method: 'standard'|'express'|'free',
+    shipping_cost: selectedShippingCost
+};
+```
+
+### CSS (`styles.css`)
+
+**Estilos añadidos** (líneas 3069-3199):
+
+**Contenedor**:
+```css
+.shipping-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+```
+
+**Opción de envío**:
+```css
+.shipping-option-content {
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+/* Hover */
+.shipping-option:hover .shipping-option-content {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Seleccionada */
+.shipping-option input[type="radio"]:checked ~ .shipping-option-content {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Deshabilitada */
+.shipping-option input[type="radio"]:disabled ~ .shipping-option-content {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+```
+
+**Badge "Más Popular"**:
+```css
+.shipping-option-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+```
+
+**Nota de envío gratis**:
+```css
+.shipping-option-note {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+```
+
+### UX Highlights
+
+**Estados visuales claros**:
+- Opción seleccionada: Borde blanco brillante + glow
+- Opción hover: Elevación sutil
+- Opción deshabilitada: Opacidad 0.5 + cursor not-allowed
+
+**Feedback inmediato**:
+- Al cambiar opción → Total se actualiza instantáneamente
+- Al alcanzar 75€ → Envío gratis se activa y mensaje desaparece
+- Animaciones suaves con transitions
+
+**Lógica de negocio**:
+- No permitir pagar envío estándar si ya tiene gratis
+- Permitir pagar express incluso con gratis (entrega rápida)
+
+### Mejoras UX Adicionales
+
+**Botones actualizados**:
+- "Volver" → "Seguir Comprando" (línea 197)
+- "Completar Pedido" → "Finalizar Pedido" (línea 194)
+
+---
+
+## 🛒 Mejoras en Sistema de Carrito (v1.0.5)
+
+### Límites de Cantidad
+
+**Mínimo: 1 unidad**
+- Botón "-" se deshabilita cuando cantidad = 1
+- No se permite eliminar con botón de cantidad
+
+**Máximo: Stock disponible**
+- Botón "+" se deshabilita cuando cantidad = stock
+- Alert si intenta agregar más: "No hay más stock disponible para la talla X"
+
+### Botón de Papelera
+
+**Ubicación**: Al lado de los controles de cantidad
+
+**HTML** (app.js línea ~610):
+```javascript
+<button class="btn-remove-item" onclick="removeFromCart(${item.id}, '${item.size}')"
+        title="Eliminar del carrito">
+    <svg>... icono de papelera ...</svg>
+</button>
+```
+
+**CSS**:
+```css
+.btn-remove-item {
+    background: rgba(255, 68, 68, 0.2);
+    border: 1px solid rgba(255, 68, 68, 0.4);
+    /* Hover effect con rojo más intenso */
+}
+```
+
+**Funcionalidad**:
+- Click → elimina item del carrito inmediatamente
+- Sincroniza con backend si usuario autenticado
+- Actualiza UI y localStorage
+
+### Sincronización con Backend
+
+**Función `removeFromCart()` actualizada**:
+```javascript
+async function removeFromCart(productId, size) {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        // DELETE request al backend con size en body
+        const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            method: 'DELETE',
+            headers: { /* ... */ },
+            body: JSON.stringify({ size: size })
+        });
+        await loadCartFromBackend(); // Reload desde DB
+    } else {
+        // Filtrar de localStorage
+        cart = cart.filter(item => !(item.id === productId && item.size === size));
+        saveCart();
+    }
+    updateCartUI();
+}
+```
+
+**Función `updateQuantity()` actualizada**:
+```javascript
+async function updateQuantity(productId, size, change) {
+    const item = cart.find(item => item.id === productId && item.size === size);
+    const newQuantity = item.quantity + change;
+
+    // Validaciones
+    if (newQuantity < 1) return; // No permitir menos de 1
+    if (newQuantity > item.stock) {
+        alert(`No hay más stock. Máximo: ${item.stock}`);
+        return;
+    }
+
+    // Sincronizar con backend si autenticado
+    if (token) {
+        await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ quantity: newQuantity, size: size })
+        });
+        await loadCartFromBackend();
+    } else {
+        item.quantity = newQuantity;
+        saveCart();
+    }
+    updateCartUI();
+}
+```
+
+### Estados Visuales de Botones
+
+**HTML con disabled dinámico**:
+```javascript
+<button class="btn-qty" onclick="updateQuantity(...)"
+        ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
+<button class="btn-qty" onclick="updateQuantity(...)"
+        ${item.quantity >= item.stock ? 'disabled' : ''}>+</button>
+```
+
+**CSS**:
+```css
+.btn-qty:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.05);
+}
+```
+
+### Backend - CartController Actualizado
+
+**Soporte para size en todas las operaciones**:
+
+**destroy()** (líneas ~80-95):
+```php
+public function destroy(Request $request, $productId) {
+    $data = $request->validate([
+        'size' => 'required|string|in:XS,S,M,L,XL,XXL',
+    ]);
+
+    $cartItem = CartItem::where('user_id', $userId)
+        ->where('product_id', $productId)
+        ->where('size', $data['size'])
+        ->firstOrFail();
+
+    $cartItem->delete();
+    return response()->json(['message' => 'Eliminado'], 200);
+}
+```
+
+**update()** (líneas ~60-78):
+```php
+public function update(Request $request, $productId) {
+    $data = $request->validate([
+        'quantity' => 'required|integer|min:1',
+        'size' => 'required|string|in:XS,S,M,L,XL,XXL',
+    ]);
+
+    // Validar stock de la talla específica
+    $productSize = ProductSize::where('product_id', $productId)
+        ->where('size', $data['size'])
+        ->first();
+
+    if ($data['quantity'] > $productSize->stock) {
+        return response()->json([
+            'message' => 'Stock insuficiente'
+        ], 400);
+    }
+
+    $cartItem->update(['quantity' => $data['quantity']]);
+}
+```
+
+### Migración de Tabla cart_items
+
+**Constraint único actualizado**:
+```php
+$table->unique(['user_id', 'product_id', 'size']);
+```
+
+Esto permite que un mismo producto con diferentes tallas sean items separados en el carrito.
+
+---
+
+## 🎯 Optimizaciones de UX (v1.0.5)
+
+### Botón "Añadir al Carrito" → "Seleccionar Talla"
+
+**Problema anterior**:
+- Botón intentaba añadir sin talla seleccionada
+- Usuario confundido sobre cómo elegir talla
+
+**Solución**:
+- Botón ahora abre modal de producto directamente
+- Texto cambiado a "Seleccionar Talla"
+- `onclick="openProductModal(${product.id})"`
+
+**Código** (app.js línea ~304-305):
+```javascript
+<button class="btn-add-cart"
+        onclick="event.stopPropagation(); openProductModal(${product.id})"
+        ${product.stock === 0 ? 'disabled' : ''}>
+    ${product.stock === 0 ? 'Agotado' : 'Seleccionar Talla'}
+</button>
+```
+
+### Cierre Automático de Modal
+
+**Problema anterior**:
+- Usuario añadía al carrito pero modal seguía abierto
+- Tenía que cerrar manualmente
+
+**Solución**:
+- Modal se cierra automáticamente tras añadir al carrito
+- Función `closeProductModal()` llamada después de `addToCart()`
+
+**Código** (app.js línea ~487-488):
+```javascript
+async function addToCartWithSize(productId) {
+    // ... código de validación
+    await addToCart(productId, selectedSize);
+    closeProductModal(); // ← Añadido
+}
+```
+
+### Botón "Volver" → "Seguir Comprando"
+
+**Checkout** (checkout.html línea 197):
+- Antes: `<a href="javascript:history.back()">Volver</a>`
+- Ahora: `<a href="/HTML/index.html">Seguir Comprando</a>`
+
+**Ventaja**:
+- Más claro el destino (tienda principal)
+- No depende del historial del navegador
+
+### Botón "Completar Pedido" → "Finalizar Pedido"
+
+**Checkout** (checkout.html línea 194):
+- Texto más profesional y común en e-commerce
+- Actualizado también en mensajes de error (checkout.js línea 229)
+
+### Eliminación de Stock en Botones de Talla
+
+**Antes**:
+- Botones mostraban "M - 10 uds" o "Agotado"
+- Sobrecargaba visualmente
+
+**Ahora**:
+- Botones solo muestran la letra de talla
+- Stock se muestra en display separado al seleccionar
+
+**Código** (app.js línea ~407):
+```javascript
+// Línea eliminada:
+// <span class="size-stock-label">${hasStock ? stock + ' uds' : 'Agotado'}</span>
+```
+
+---
+
+## 🌱 Mejoras en Seeders (v1.0.5)
+
+### Auto-creación de Tallas con Stock
+
+**Problema anterior**:
+- Después de `migrate:fresh --seed`, productos tenían stock general
+- Pero no tenían registros en `product_sizes`
+- Usuario no podía añadir al carrito (requiere talla específica)
+
+**Solución**:
+- ProductSeeder ahora crea automáticamente 6 registros de tallas por producto
+- Stock se distribuye equitativamente entre las 6 tallas
+- Resto va a la talla M
+
+**Código** (ProductSeeder.php líneas ~30-50):
+```php
+$sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+foreach ($products as $productData) {
+    $product = Product::create($productData);
+
+    $totalStock = $productData['stock'];
+    $stockPerSize = floor($totalStock / count($sizes));
+    $remainder = $totalStock % count($sizes);
+
+    foreach ($sizes as $size) {
+        $sizeStock = $stockPerSize;
+
+        // El resto va a la talla M
+        if ($size === 'M' && $remainder > 0) {
+            $sizeStock += $remainder;
+        }
+
+        ProductSize::create([
+            'product_id' => $product->id,
+            'size' => $size,
+            'stock' => $sizeStock
+        ]);
+    }
+}
+```
+
+**Ejemplo de distribución**:
+```
+Producto con stock 30:
+- XS: 5 uds
+- S: 5 uds
+- M: 5 uds
+- L: 5 uds
+- XL: 5 uds
+- XXL: 5 uds
+
+Producto con stock 32:
+- XS: 5 uds
+- S: 5 uds
+- M: 7 uds  ← Resto de 2 unidades
+- L: 5 uds
+- XL: 5 uds
+- XXL: 5 uds
+```
+
+**Beneficio**:
+- Después de seeder, todos los productos son completamente funcionales
+- No se requiere configuración manual de tallas
+- Sistema 100% operativo desde el primer `migrate:fresh --seed`
 
 ---
 

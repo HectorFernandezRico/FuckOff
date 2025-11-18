@@ -70,6 +70,58 @@
                     </div>
 
                     <div class="checkout-card">
+                        <h3 class="checkout-card-title">Método de Envío</h3>
+
+                        <div class="shipping-options">
+                            <label class="shipping-option" id="standardShippingOption">
+                                <input type="radio" name="shippingMethod" value="standard" data-price="5" checked>
+                                <div class="shipping-option-content">
+                                    <div class="shipping-option-header">
+                                        <span class="shipping-option-icon">📦</span>
+                                        <div class="shipping-option-info">
+                                            <span class="shipping-option-name">Envío Estándar</span>
+                                            <span class="shipping-option-time">3-5 días laborables</span>
+                                        </div>
+                                        <span class="shipping-option-price">5.00€</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="shipping-option" id="expressShippingOption">
+                                <input type="radio" name="shippingMethod" value="express" data-price="8">
+                                <div class="shipping-option-content">
+                                    <div class="shipping-option-header">
+                                        <span class="shipping-option-icon">🚀</span>
+                                        <div class="shipping-option-info">
+                                            <span class="shipping-option-name">Envío Express</span>
+                                            <span class="shipping-option-time">24-48 horas</span>
+                                        </div>
+                                        <span class="shipping-option-price">8.00€</span>
+                                    </div>
+                                    <span class="shipping-option-badge">Más Popular</span>
+                                </div>
+                            </label>
+
+                            <label class="shipping-option" id="freeShippingOption">
+                                <input type="radio" name="shippingMethod" value="free" data-price="0" disabled>
+                                <div class="shipping-option-content">
+                                    <div class="shipping-option-header">
+                                        <span class="shipping-option-icon">🎁</span>
+                                        <div class="shipping-option-info">
+                                            <span class="shipping-option-name">Envío Gratis</span>
+                                            <span class="shipping-option-time">Compras +75€</span>
+                                        </div>
+                                        <span class="shipping-option-price">Gratis</span>
+                                    </div>
+                                    <div class="shipping-option-note" id="freeShippingNote">
+                                        Añade <span id="amountForFreeShipping">0.00€</span> más para envío gratis
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="checkout-card">
                         <h3 class="checkout-card-title">Información de Pago</h3>
 
                         <div class="form-group">
@@ -139,10 +191,10 @@
                         </div>
 
                         <button class="btn-primary btn-full" id="completeOrderBtn">
-                            Completar Pedido
+                            Finalizar Pedido
                         </button>
 
-                        <a href="javascript:history.back()" class="btn-secondary btn-full" style="margin-top: 1rem; display: block; text-align: center;">Volver</a>
+                        <a href="/HTML/index.html" class="btn-secondary btn-full" style="margin-top: 1rem; display: block; text-align: center;">Seguir Comprando</a>
                     </div>
                 </div>
             </div>
