@@ -176,7 +176,8 @@ async function loadProducts() {
         const data = await response.json();
 
         if (data.data) {
-            allProducts = data.data;
+            // Filtrar solo productos activos (active === 1)
+            allProducts = data.data.filter(product => product.active === 1);
             filteredProducts = [...allProducts];
             renderProducts(filteredProducts);
         }
@@ -532,6 +533,12 @@ function updateProductImage() {
 async function addToCart(productId, selectedSize = null) {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
+
+    // Verificar que el producto esté activo
+    if (product.active !== 1) {
+        alert('Este producto no está disponible');
+        return;
+    }
 
     // Usar la talla seleccionada o la talla por defecto del producto
     const size = selectedSize || product.size;

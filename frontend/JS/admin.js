@@ -281,13 +281,20 @@ function renderProducts() {
 
     tbody.innerHTML = products.map(prod => {
         const category = categories.find(c => c.id === prod.category_id);
+
+        // Calcular stock total desde las tallas si existen
+        let totalStock = prod.stock; // Fallback al stock general
+        if (prod.sizes && prod.sizes.length > 0) {
+            totalStock = prod.sizes.reduce((sum, size) => sum + (size.stock || 0), 0);
+        }
+
         return `
             <tr>
                 <td>${prod.id}</td>
                 <td>${prod.name}</td>
                 <td>${category?.name || 'N/A'}</td>
                 <td>${parseFloat(prod.price).toFixed(2)}€</td>
-                <td>${prod.stock}</td>
+                <td>${totalStock}</td>
                 <td><span class="badge ${prod.active ? 'badge-active' : 'badge-inactive'}">${prod.active ? 'Activo' : 'Inactivo'}</span></td>
                 <td class="actions-cell">
                     <button class="btn-action btn-edit" onclick="openProductModal(${prod.id})">Editar</button>

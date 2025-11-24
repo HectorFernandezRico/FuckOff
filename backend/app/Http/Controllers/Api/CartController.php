@@ -18,6 +18,10 @@ class CartController extends Controller
         $cartItems = CartItem::with('product.sizes')
             ->where('user_id', $userId)
             ->get()
+            ->filter(function ($item) {
+                // Filtrar productos inactivos
+                return $item->product && $item->product->active;
+            })
             ->map(function ($item) {
                 // Buscar stock de la talla específica
                 $sizeStock = $item->product->sizes->where('size', $item->size)->first();
@@ -32,7 +36,8 @@ class CartController extends Controller
                     'stock' => $availableStock,
                     'quantity' => $item->quantity,
                 ];
-            });
+            })
+            ->values(); // Re-indexar el array después del filter
 
         return response()->json(['data' => $cartItems], Response::HTTP_OK);
     }
@@ -48,8 +53,16 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        // Verificar stock disponible de la talla específica
+        // Verificar que el producto esté activo
         $product = Product::with('sizes')->findOrFail($data['product_id']);
+
+        if (!$product->active) {
+            return response()->json([
+                'error' => 'Este producto no está disponible'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Verificar stock disponible de la talla específica
         $sizeStock = $product->sizes->where('size', $data['size'])->first();
         $availableStock = $sizeStock ? $sizeStock->stock : $product->stock;
 
@@ -109,8 +122,16 @@ class CartController extends Controller
             ->where('size', $data['size'])
             ->firstOrFail();
 
-        // Verificar stock de la talla específica
+        // Verificar que el producto esté activo
         $product = Product::with('sizes')->findOrFail($productId);
+
+        if (!$product->active) {
+            return response()->json([
+                'error' => 'Este producto no está disponible'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Verificar stock de la talla específica
         $sizeStock = $product->sizes->where('size', $data['size'])->first();
         $availableStock = $sizeStock ? $sizeStock->stock : $product->stock;
 
@@ -175,7 +196,8 @@ class CartController extends Controller
         foreach ($data['items'] as $item) {
             $product = Product::with('sizes')->find($item['id']);
 
-            if ($product) {
+            if ($product && $product->active) {
+                // Solo sincronizar productos activos
                 // Verificar stock de la talla específica
                 $sizeStock = $product->sizes->where('size', $item['size'])->first();
                 $availableStock = $sizeStock ? $sizeStock->stock : $product->stock;

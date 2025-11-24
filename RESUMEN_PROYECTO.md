@@ -700,6 +700,144 @@ php artisan make:seeder NombreSeeder
 
 ## 🐛 Problemas Resueltos
 
+### Productos Inactivos se Podían Comprar - SEGURIDAD (24/11/2025)
+
+#### Problema
+Los productos marcados como inactivos (`active = 0`) en el panel de administración seguían siendo visibles en la tienda y se podían añadir al carrito y comprar. Esto representaba un problema de seguridad y control de inventario.
+
+#### Causa Raíz
+No existían validaciones del campo `active` en:
+- Frontend: `loadProducts()` no filtraba productos inactivos
+- Frontend: `addToCart()` no verificaba el estado del producto
+- Backend: `CartController` permitía operaciones con productos inactivos
+- Backend: `OrderController` no validaba el estado al crear pedidos
+
+#### Solución Aplicada
+
+**Frontend** (`frontend/JS/app.js`):
+
+1. **Filtrado en carga de productos** (línea 180):
+```javascript
+// Filtrar solo productos activos (active === 1)
+allProducts = data.data.filter(product => product.active === 1);
+```
+
+2. **Validación en addToCart** (líneas 537-541):
+```javascript
+// Verificar que el producto esté activo
+if (product.active !== 1) {
+    alert('Este producto no está disponible');
+    return;
+}
+```
+
+**Backend** (`backend/app/Http/Controllers/Api/CartController.php`):
+
+3. **Filtrado en index()** (líneas 21-24):
+```php
+->filter(function ($item) {
+    // Filtrar productos inactivos del carrito
+    return $item->product && $item->product->active;
+})
+```
+
+4. **Validación en store()** (líneas 54-58):
+```php
+if (!$product->active) {
+    return response()->json([
+        'error' => 'Este producto no está disponible'
+    ], Response::HTTP_BAD_REQUEST);
+}
+```
+
+5. **Validación en update()** (líneas 123-127):
+```php
+if (!$product->active) {
+    return response()->json([
+        'error' => 'Este producto no está disponible'
+    ], Response::HTTP_BAD_REQUEST);
+}
+```
+
+6. **Validación en sync()** (línea 194):
+```php
+if ($product && $product->active) {
+    // Solo sincronizar productos activos
+}
+```
+
+**Backend** (`backend/app/Http/Controllers/Api/OrderController.php`):
+
+7. **Validación en store()** (líneas 57-60):
+```php
+if (!$product->active) {
+    throw new \Exception("El producto {$product->name} no está disponible");
+}
+```
+
+#### Resultado
+✅ Productos inactivos no aparecen en el catálogo
+✅ No se pueden añadir al carrito (validación frontend)
+✅ API rechaza operaciones con productos inactivos (validación backend)
+✅ No se pueden crear pedidos con productos inactivos
+✅ Carrito se limpia automáticamente de productos que se vuelven inactivos
+
+#### Archivos Modificados
+- `frontend/JS/app.js` (líneas 180, 537-541)
+- `backend/app/Http/Controllers/Api/CartController.php` (líneas 21-24, 54-58, 123-127, 194)
+- `backend/app/Http/Controllers/Api/OrderController.php` (líneas 57-60)
+
+---
+
+### Visualización Incorrecta de Stock en Panel Admin (24/11/2025)
+
+#### Problema
+En el panel de administración, la columna de stock mostraba valores incorrectos. Por ejemplo, al configurar 5 unidades por talla (XS, S, M, L, XL, XXL), mostraba 30 unidades en lugar de la suma correcta calculada dinámicamente.
+
+#### Causa Raíz
+El sistema utilizaba el campo `stock` general del producto (que almacena la suma de todas las tallas al crear el producto), pero este valor podía quedar **desincronizado** si:
+- Se vendían productos (el stock de tallas se reduce, pero el stock general no)
+- Se actualizaba solo el stock de algunas tallas
+- Se eliminaban tallas
+
+La tabla mostraba directamente `prod.stock` sin recalcular desde las tallas.
+
+#### Solución Aplicada
+
+**Frontend** (`frontend/JS/admin.js` líneas 285-289):
+
+```javascript
+// Calcular stock total desde las tallas si existen
+let totalStock = prod.stock; // Fallback al stock general
+if (prod.sizes && prod.sizes.length > 0) {
+    totalStock = prod.sizes.reduce((sum, size) => sum + (size.stock || 0), 0);
+}
+```
+
+**Lógica implementada**:
+1. Si el producto tiene tallas configuradas (`prod.sizes.length > 0`):
+   - Suma dinámicamente el stock de todas las tallas usando `reduce()`
+   - Ejemplo: XS:5 + S:5 + M:5 + L:5 + XL:5 + XXL:5 = **30 unidades**
+2. Si no tiene tallas configuradas (productos legacy):
+   - Usa el campo `stock` general como fallback
+
+**Backend** (`backend/app/Http/Controllers/Api/ProductController.php` línea 16):
+```php
+// Ya incluía ->with('sizes') para cargar las tallas
+$products = Product::with('sizes')->get();
+```
+
+#### Resultado
+✅ Stock se calcula en tiempo real desde la tabla `product_sizes`
+✅ Evita desincronización entre stock general y stock por talla
+✅ Compatibilidad con productos sin tallas configuradas
+✅ Visualización precisa del inventario disponible
+
+#### Archivos Modificados
+- `frontend/JS/admin.js` (líneas 285-289)
+
+---
+
 ### Error de Sintaxis en OrderController - CRÍTICO (05/11/2025)
 
 #### Problema
@@ -1030,10 +1168,27 @@ docker exec tienda_backend composer dump-autoload
 ## 📞 Información de Contacto
 
 **Proyecto**: FVCKOFF E-commerce
-**Versión**: 1.0.5
+**Versión**: 1.0.6
 **Fecha**: Noviembre 2025
 **Stack**: Laravel 11 + Vanilla JS + Docker
-**Última Actualización**: 18/11/2025
+**Última Actualización**: 24/11/2025
+
+### 🆕 Cambios en v1.0.6 (24/11/2025)
+- ✅ **SEGURIDAD**: Sistema completo de validación de productos inactivos
+  - Frontend: Productos inactivos no se muestran en catálogo
+  - Frontend: Validación al intentar añadir productos inactivos al carrito
+  - Backend CartController: Validaciones en store(), update(), sync() e index()
+  - Backend OrderController: Validación al crear pedidos
+  - Productos inactivos se filtran automáticamente del carrito al cargar
+- ✅ **Panel Admin**: Corrección de visualización de stock
+  - Stock ahora se calcula dinámicamente desde product_sizes
+  - Suma en tiempo real del stock de todas las tallas
+  - Evita desincronización entre stock general y stock por talla
+- ✅ **Base de Datos**: Limpieza y reset completo
+  - Reset de AUTO_INCREMENT con migrate:fresh
+  - Recreación de categorías base (Camisetas, Pantalones, Sudaderas, Chaquetas, Accesorios)
+  - Creación de usuario administrador
+- ✅ **Documentación**: Resumen actualizado con cambios de la sesión
 
 ### 🆕 Cambios en v1.0.3 (05/11/2025)
 - ✅ **CRÍTICO**: Corregido error fatal en sistema de checkout (ParseError en OrderController)

@@ -54,6 +54,11 @@ class OrderController extends Controller
             foreach ($data['items'] as $item) {
                 $product = Product::findOrFail($item['product_id']);
 
+                // Verificar que el producto esté activo
+                if (!$product->active) {
+                    throw new \Exception("El producto {$product->name} no está disponible");
+                }
+
                 // Verificar stock disponible
                 if ($product->stock < $item['quantity']) {
                     throw new \Exception("Stock insuficiente para el producto: {$product->name}. Disponible: {$product->stock}, Solicitado: {$item['quantity']}");
