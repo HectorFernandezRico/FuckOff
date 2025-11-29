@@ -337,6 +337,9 @@ function openProductModal(productId) {
     // Resetear flag de primera talla seleccionada
     window.firstSizeSelected = false;
 
+    // Verificar si es un accesorio (category_id = 5)
+    const isAccessory = product.category_id === 5;
+
     // Determinar si el producto tiene tallas configuradas o usa stock general
     const hasSizesConfigured = product.sizes && product.sizes.length > 0;
 
@@ -377,6 +380,7 @@ function openProductModal(productId) {
                 <div class="modal-price">${parseFloat(product.price).toFixed(2)}€</div>
                 <p class="modal-description">${product.description || 'Sin descripción disponible para este producto.'}</p>
 
+                ${!isAccessory ? `
                 <div class="size-selector-container">
                     <label class="size-selector-label">Selecciona tu talla:</label>
                     <div class="size-selector" id="sizeSelector">
@@ -410,6 +414,7 @@ function openProductModal(productId) {
                         }).join('')}
                     </div>
                 </div>
+                ` : ''}
 
                 <div class="modal-info">
                     <div class="info-item">
@@ -476,11 +481,20 @@ function selectSize(size, stock) {
 }
 
 async function addToCartWithSize(productId) {
-    const selectedSize = window.selectedSize || document.querySelector('.size-option.active')?.dataset.size;
+    const product = allProducts.find(p => p.id === productId);
+    const isAccessory = product && product.category_id === 5;
 
-    if (!selectedSize) {
+    let selectedSize = window.selectedSize || document.querySelector('.size-option.active')?.dataset.size;
+
+    // Si es accesorio, no necesita talla
+    if (!isAccessory && !selectedSize) {
         alert('Por favor, selecciona una talla');
         return;
+    }
+
+    // Si es accesorio, usar 'N/A' como talla por defecto
+    if (isAccessory) {
+        selectedSize = 'N/A';
     }
 
     await addToCart(productId, selectedSize);
@@ -728,7 +742,7 @@ function updateCartUI() {
             </div>
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-size">Talla ${item.size}</div>
+                ${item.size !== 'N/A' ? `<div class="cart-item-size">Talla ${item.size}</div>` : ''}
                 <div class="cart-item-footer">
                     <div class="cart-item-price">${(item.price * item.quantity).toFixed(2)}€</div>
                     <div class="cart-item-actions">

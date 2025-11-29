@@ -342,12 +342,12 @@ function openProductModal(id = null) {
                 </select>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Stock General (para todas las tallas)</label>
+            <div class="form-group" id="stockGeneralGroup">
+                <label class="form-label">Stock General <span id="stockGeneralHint">(para todas las tallas)</span></label>
                 <input type="number" class="form-input" id="productStockAll" placeholder="Dejar vacío para configurar por talla">
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="sizeStockGroup">
                 <label class="form-label">Stock por Talla</label>
                 <div class="size-stock-container">
                     ${['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => {
@@ -394,12 +394,52 @@ function openProductModal(id = null) {
         saveProduct(id);
     });
 
-    // Event listener para Stock General (aplicar a todas las tallas)
+    // Event listener para cambiar entre categorías y ocultar/mostrar tallas
+    const categorySelect = document.getElementById('productCategory');
+    const sizeStockGroup = document.getElementById('sizeStockGroup');
+    const stockGeneralHint = document.getElementById('stockGeneralHint');
     const stockAllInput = document.getElementById('productStockAll');
+
+    function toggleSizeInputs() {
+        const selectedCategoryId = parseInt(categorySelect.value);
+        const isAccessory = selectedCategoryId === 5;
+
+        if (isAccessory) {
+            // Ocultar sección de tallas
+            sizeStockGroup.style.display = 'none';
+            // Cambiar hint del stock general
+            if (stockGeneralHint) {
+                stockGeneralHint.textContent = '';
+            }
+            // Hacer obligatorio el stock general
+            stockAllInput.placeholder = 'Stock del producto';
+            stockAllInput.required = true;
+        } else {
+            // Mostrar sección de tallas
+            sizeStockGroup.style.display = 'block';
+            // Restaurar hint
+            if (stockGeneralHint) {
+                stockGeneralHint.textContent = '(para todas las tallas)';
+            }
+            // Hacer opcional el stock general
+            stockAllInput.placeholder = 'Dejar vacío para configurar por talla';
+            stockAllInput.required = false;
+        }
+    }
+
+    // Ejecutar al cargar si ya hay categoría seleccionada
+    if (categorySelect.value) {
+        toggleSizeInputs();
+    }
+
+    // Ejecutar al cambiar categoría
+    categorySelect.addEventListener('change', toggleSizeInputs);
+
+    // Event listener para Stock General (aplicar a todas las tallas)
     if (stockAllInput) {
         stockAllInput.addEventListener('input', (e) => {
             const value = e.target.value;
-            if (value) {
+            if (value && sizeStockGroup.style.display !== 'none') {
                 document.querySelectorAll('.size-stock-input').forEach(input => {
                     input.value = value;
                 });
@@ -417,26 +457,40 @@ async function saveProduct(id = null) {
     formData.append('slug', document.getElementById('productSlug').value);
     formData.append('description', document.getElementById('productDescription').value);
     formData.append('price', document.getElementById('productPrice').value);
-    formData.append('category_id', document.getElementById('productCategory').value);
+
+    const categoryId = document.getElementById('productCategory').value;
+    formData.append('category_id', categoryId);
     formData.append('active', document.getElementById('productActive').checked ? '1' : '0');
 
-    // Recoger stock por talla
-    const sizeInputs = document.querySelectorAll('.size-stock-input');
-    const sizes = [];
-    let totalStock = 0;
+    const isAccessory = parseInt(categoryId) === 5;
 
-    sizeInputs.forEach(input => {
-        const size = input.dataset.size;
-        const stock = parseInt(input.value) || 0;
-        sizes.push({ size, stock });
-        totalStock += stock;
-    });
+    // Recoger stock
+    if (isAccessory) {
+        // Para accesorios: usar solo el stock general
+        const stockAll = document.getElementById('productStockAll').value;
+        const totalStock = parseInt(stockAll) || 0;
+        formData.append('stock', totalStock);
+        // No enviar tallas para accesorios
+        formData.append('sizes', JSON.stringify([]));
+    } else {
+        // Para productos con tallas: recoger stock por talla
+        const sizeInputs = document.querySelectorAll('.size-stock-input');
+        const sizes = [];
+        let totalStock = 0;
 
-    // Enviar stock total (suma de todas las tallas)
-    formData.append('stock', totalStock);
+        sizeInputs.forEach(input => {
+            const size = input.dataset.size;
+            const stock = parseInt(input.value) || 0;
+            sizes.push({ size, stock });
+            totalStock += stock;
+        });
 
-    // Enviar array de tallas con stock como JSON
-    formData.append('sizes', JSON.stringify(sizes));
+        // Enviar stock total (suma de todas las tallas)
+        formData.append('stock', totalStock);
+
+        // Enviar array de tallas con stock como JSON
+        formData.append('sizes', JSON.stringify(sizes));
+    }
 
     // Agregar imagen principal si se seleccionó
     const imageInput = document.getElementById('productImage');

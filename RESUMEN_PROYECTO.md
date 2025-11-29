@@ -700,6 +700,209 @@ php artisan make:seeder NombreSeeder
 
 ## 🐛 Problemas Resueltos
 
+### Sistema de Accesorios sin Tallas - IMPLEMENTACIÓN COMPLETA (29/11/2025)
+
+#### Necesidad
+El usuario requería que la categoría "Accesorios" (gorras, bolsos, mochilas, etc.) no mostrara el selector de tallas, ya que estos productos no lo necesitan. El objetivo era simplificar el proceso de compra para este tipo de productos.
+
+#### Análisis del Problema
+El sistema estaba diseñado exclusivamente para productos con tallas (XS-XXL), aplicando esta lógica a todas las categorías sin distinción. Esto creaba una experiencia de usuario confusa para accesorios que no requieren talla.
+
+**Impacto:**
+- UX: Clientes debían seleccionar una talla innecesaria para gorras, bolsos, etc.
+- Admin: Obligados a configurar stock por talla para productos de talla única
+- Datos: Stock mal distribuido entre tallas inexistentes
+
+#### Solución Implementada
+
+**1. Frontend - Tienda** (`frontend/JS/app.js`)
+
+**Detección de Accesorios (línea 341):**
+```javascript
+// Verificar si es un accesorio (category_id = 5)
+const isAccessory = product.category_id === 5;
+```
+
+**Ocultación Condicional del Selector de Tallas (líneas 383-417):**
+```javascript
+// Solo renderiza selector de tallas si NO es accesorio
+${!isAccessory ? `
+  <div class="size-selector-container">
+    <label class="size-selector-label">Selecciona tu talla:</label>
+    <div class="size-selector" id="sizeSelector">
+      ${/* Botones de tallas XS-XXL */}
+    </div>
+  </div>
+` : ''}
+```
+
+**Lógica de Añadir al Carrito sin Talla (líneas 483-503):**
+```javascript
+async function addToCartWithSize(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    const isAccessory = product && product.category_id === 5;
+
+    let selectedSize = window.selectedSize || document.querySelector('.size-option.active')?.dataset.size;
+
+    // Si es accesorio, no necesita talla
+    if (!isAccessory && !selectedSize) {
+        alert('Por favor, selecciona una talla');
+        return;
+    }
+
+    // Si es accesorio, usar 'N/A' como talla por defecto
+    if (isAccessory) {
+        selectedSize = 'N/A';
+    }
+
+    await addToCart(productId, selectedSize);
+    closeProductModal();
+}
+```
+
+**Display Condicional en Carrito (línea 745):**
+```javascript
+// Solo muestra "Talla X" si la talla NO es 'N/A'
+${item.size !== 'N/A' ? `<div class="cart-item-size">Talla ${item.size}</div>` : ''}
+```
+
+**2. Panel Admin** (`frontend/JS/admin.js`)
+
+**IDs Añadidos a Grupos de Stock (líneas 345-368):**
+```javascript
+<div class="form-group" id="stockGeneralGroup">
+    <label class="form-label">Stock General <span id="stockGeneralHint">(para todas las tallas)</span></label>
+    <input type="number" class="form-input" id="productStockAll" placeholder="Dejar vacío para configurar por talla">
+</div>
+
+<div class="form-group" id="sizeStockGroup">
+    <label class="form-label">Stock por Talla</label>
+    <div class="size-stock-container">
+        ${/* Inputs de tallas XS-XXL */}
+    </div>
+</div>
+```
+
+**Función `toggleSizeInputs()` (líneas 403-428):**
+```javascript
+function toggleSizeInputs() {
+    const selectedCategoryId = parseInt(categorySelect.value);
+    const isAccessory = selectedCategoryId === 5;
+
+    if (isAccessory) {
+        // Ocultar sección de tallas
+        sizeStockGroup.style.display = 'none';
+        // Cambiar hint del stock general
+        if (stockGeneralHint) {
+            stockGeneralHint.textContent = '';
+        }
+        // Hacer obligatorio el stock general
+        stockAllInput.placeholder = 'Stock del producto';
+        stockAllInput.required = true;
+    } else {
+        // Mostrar sección de tallas
+        sizeStockGroup.style.display = 'block';
+        // Restaurar hint
+        if (stockGeneralHint) {
+            stockGeneralHint.textContent = '(para todas las tallas)';
+        }
+        // Hacer opcional el stock general
+        stockAllInput.placeholder = 'Dejar vacío para configurar por talla';
+        stockAllInput.required = false;
+    }
+}
+```
+
+**Event Listeners (líneas 430-436):**
+```javascript
+// Ejecutar al cargar si ya hay categoría seleccionada
+if (categorySelect.value) {
+    toggleSizeInputs();
+}
+
+// Ejecutar al cambiar categoría
+categorySelect.addEventListener('change', toggleSizeInputs);
+```
+
+**Lógica Condicional en `saveProduct()` (líneas 465-493):**
+```javascript
+const isAccessory = parseInt(categoryId) === 5;
+
+// Recoger stock
+if (isAccessory) {
+    // Para accesorios: usar solo el stock general
+    const stockAll = document.getElementById('productStockAll').value;
+    const totalStock = parseInt(stockAll) || 0;
+    formData.append('stock', totalStock);
+    // No enviar tallas para accesorios
+    formData.append('sizes', JSON.stringify([]));
+} else {
+    // Para productos con tallas: recoger stock por talla
+    const sizeInputs = document.querySelectorAll('.size-stock-input');
+    const sizes = [];
+    let totalStock = 0;
+
+    sizeInputs.forEach(input => {
+        const size = input.dataset.size;
+        const stock = parseInt(input.value) || 0;
+        sizes.push({ size, stock });
+        totalStock += stock;
+    });
+
+    formData.append('stock', totalStock);
+    formData.append('sizes', JSON.stringify(sizes));
+}
+```
+
+#### Flujo Completo Implementado
+
+**Crear Accesorio:**
+1. Admin selecciona "Accesorios" → inputs de tallas se ocultan automáticamente
+2. Admin introduce stock general (obligatorio): 25 unidades
+3. Backend recibe: `{stock: 25, sizes: [], category_id: 5}`
+4. Producto se guarda sin registros en `product_sizes`
+
+**Comprar Accesorio:**
+1. Cliente navega a categoría "Accesorios"
+2. Click en producto → modal se abre SIN selector de tallas
+3. Click "Añadir al Carrito" → se añade con talla 'N/A' internamente
+4. Carrito muestra: "Nombre del producto" (sin "Talla X")
+
+#### Resultado
+✅ Modal de producto NO muestra selector de tallas para accesorios
+✅ Panel admin oculta inputs de tallas al seleccionar categoría "Accesorios"
+✅ Campo "Stock General" se vuelve obligatorio para accesorios
+✅ Carrito no muestra "Talla X" para items con talla 'N/A'
+✅ Función `addToCartWithSize()` no requiere talla para accesorios
+✅ Backend recibe array vacío de tallas para accesorios
+✅ Compatibilidad total con productos existentes con tallas
+
+#### Archivos Modificados
+**Frontend - Tienda:**
+- `frontend/JS/app.js:341` - Detección de accesorios
+- `frontend/JS/app.js:383-417` - Selector de tallas condicional
+- `frontend/JS/app.js:483-503` - Lógica addToCartWithSize sin talla
+- `frontend/JS/app.js:745` - Display condicional de talla en carrito
+
+**Frontend - Admin:**
+- `frontend/JS/admin.js:345-368` - IDs añadidos a grupos de stock
+- `frontend/JS/admin.js:397-450` - toggleSizeInputs() + event listeners
+- `frontend/JS/admin.js:465-493` - Lógica condicional en saveProduct()
+
+#### Beneficios
+- **UX mejorada**: Clientes no necesitan seleccionar talla innecesaria para accesorios
+- **Gestión simplificada**: Admins configuran solo stock general para accesorios
+- **Datos limpios**: No se crean registros de tallas falsas en BD
+- **Mantenibilidad**: Lógica centralizada y clara con detección por `category_id`
+- **Escalabilidad**: Fácil agregar más categorías sin tallas en el futuro
+
+#### Limitaciones
+- Hardcoded a `category_id = 5` (Accesorios)
+- Si se requiere otra categoría sin tallas, debe duplicarse la lógica
+- Mejora futura: Campo `requires_size` en tabla `categories`
+
+---
+
 ### Productos Inactivos se Podían Comprar - SEGURIDAD (24/11/2025)
 
 #### Problema
@@ -1168,10 +1371,23 @@ docker exec tienda_backend composer dump-autoload
 ## 📞 Información de Contacto
 
 **Proyecto**: FVCKOFF E-commerce
-**Versión**: 1.0.6
+**Versión**: 1.0.7
 **Fecha**: Noviembre 2025
 **Stack**: Laravel 11 + Vanilla JS + Docker
-**Última Actualización**: 24/11/2025
+**Última Actualización**: 29/11/2025
+
+### 🆕 Cambios en v1.0.7 (29/11/2025)
+- ✅ **Sistema de Accesorios sin Tallas**: Implementación completa de productos sin selector de tallas
+  - Frontend: Categoría "Accesorios" (category_id=5) no muestra selector de tallas en modal de producto
+  - Panel Admin: Al seleccionar "Accesorios" se oculta automáticamente la sección "Stock por Talla"
+  - Panel Admin: Campo "Stock General" se vuelve obligatorio y cambia placeholder para accesorios
+  - Lógica de carrito: Items de accesorios usan talla 'N/A' internamente
+  - Visualización de carrito: No muestra "Talla X" para productos sin talla
+  - Función `addToCartWithSize()`: No requiere selección de talla para accesorios
+  - Función `saveProduct()`: Envía array vacío de tallas para accesorios, solo stock general
+  - Función `toggleSizeInputs()`: Controla visibilidad dinámica según categoría seleccionada
+- ✅ **UX Mejorada**: Proceso de añadir al carrito simplificado para accesorios (gorras, bolsos, etc.)
+- ✅ **Compatibilidad**: Sistema mantiene funcionalidad completa de tallas para otras categorías
 
 ### 🆕 Cambios en v1.0.6 (24/11/2025)
 - ✅ **SEGURIDAD**: Sistema completo de validación de productos inactivos
@@ -2111,6 +2327,212 @@ Si `product.sizes` está vacío o `product.sizes.length === 0`:
 
 **Admin HTML**:
 - `frontend/HTML/admin.html` (inputs de stock por talla)
+
+---
+
+## 🎒 Sistema de Accesorios sin Tallas (v1.0.7)
+
+### Concepto
+La categoría "Accesorios" (gorras, bolsos, mochilas, etc.) no requiere selección de tallas. Los productos se gestionan únicamente con stock general.
+
+### Diferencias con Productos con Tallas
+
+#### Productos Normales (Camisetas, Pantalones, etc.)
+- Requieren selección de talla (XS, S, M, L, XL, XXL)
+- Stock independiente por talla
+- Mismo producto + diferentes tallas = items separados en carrito
+- Display: "Producto X - Talla M"
+
+#### Accesorios
+- **NO** requieren selección de talla
+- Stock general único
+- Un solo item por producto en carrito
+- Display: "Producto X" (sin mención de talla)
+
+### Implementación Frontend - Tienda
+
+#### Detección de Accesorios (`app.js:341`)
+```javascript
+const isAccessory = product.category_id === 5;
+```
+
+#### Modal de Producto (`app.js:383-417`)
+```javascript
+// Solo renderiza selector de tallas si NO es accesorio
+${!isAccessory ? `
+  <div class="size-selector-container">
+    <!-- Selector de tallas XS-XXL -->
+  </div>
+` : ''}
+```
+
+#### Añadir al Carrito (`app.js:483-503`)
+```javascript
+async function addToCartWithSize(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    const isAccessory = product && product.category_id === 5;
+
+    let selectedSize = window.selectedSize || ...;
+
+    // Si es accesorio, no necesita talla
+    if (!isAccessory && !selectedSize) {
+        alert('Por favor, selecciona una talla');
+        return;
+    }
+
+    // Si es accesorio, usar 'N/A' como talla por defecto
+    if (isAccessory) {
+        selectedSize = 'N/A';
+    }
+
+    await addToCart(productId, selectedSize);
+    closeProductModal();
+}
+```
+
+#### Display en Carrito (`app.js:745`)
+```javascript
+// Solo muestra "Talla X" si la talla NO es 'N/A'
+${item.size !== 'N/A' ? `<div class="cart-item-size">Talla ${item.size}</div>` : ''}
+```
+
+### Implementación Panel Admin
+
+#### Función `toggleSizeInputs()` (`admin.js:403-428`)
+Controla la visibilidad de los campos de tallas según la categoría:
+
+```javascript
+function toggleSizeInputs() {
+    const selectedCategoryId = parseInt(categorySelect.value);
+    const isAccessory = selectedCategoryId === 5;
+
+    if (isAccessory) {
+        // Ocultar sección de tallas
+        sizeStockGroup.style.display = 'none';
+        // Cambiar hint del stock general
+        stockGeneralHint.textContent = '';
+        // Hacer obligatorio el stock general
+        stockAllInput.placeholder = 'Stock del producto';
+        stockAllInput.required = true;
+    } else {
+        // Mostrar sección de tallas
+        sizeStockGroup.style.display = 'block';
+        // Restaurar hint
+        stockGeneralHint.textContent = '(para todas las tallas)';
+        // Hacer opcional el stock general
+        stockAllInput.placeholder = 'Dejar vacío para configurar por talla';
+        stockAllInput.required = false;
+    }
+}
+```
+
+**Event Listeners:**
+- Al cargar modal: verifica categoría seleccionada
+- Al cambiar categoría: ejecuta `toggleSizeInputs()`
+
+#### Función `saveProduct()` (`admin.js:465-493`)
+Maneja el guardado según tipo de producto:
+
+```javascript
+const isAccessory = parseInt(categoryId) === 5;
+
+if (isAccessory) {
+    // Para accesorios: usar solo el stock general
+    const stockAll = document.getElementById('productStockAll').value;
+    const totalStock = parseInt(stockAll) || 0;
+    formData.append('stock', totalStock);
+    // No enviar tallas para accesorios
+    formData.append('sizes', JSON.stringify([]));
+} else {
+    // Para productos con tallas: recoger stock por talla
+    // ... lógica existente
+}
+```
+
+### Flujo Completo - Crear Accesorio
+
+1. **Admin accede al panel**
+   - Va a pestaña "Productos"
+   - Click "Nuevo Producto"
+
+2. **Formulario de producto**
+   - Nombre: "Gorra Urbana Gris"
+   - Categoría: **Accesorios** ← Al seleccionar
+     - ❌ Desaparece sección "Stock por Talla"
+     - ✅ Campo "Stock General" se vuelve obligatorio
+     - ✅ Placeholder cambia a "Stock del producto"
+   - Stock General: 25 (obligatorio)
+   - Imagen: upload
+   - Guardar
+
+3. **Backend procesa**
+   - Recibe: `stock: 25`, `sizes: []`, `category_id: 5`
+   - Crea producto sin registros en `product_sizes`
+   - Stock se guarda en campo `stock` del producto
+
+4. **Cliente ve en tienda**
+   - Navega a pestaña "Accesorios"
+   - Click en "Gorra Urbana Gris"
+   - Modal se abre **SIN selector de tallas**
+   - Botón muestra "Añadir al Carrito" directamente
+
+5. **Cliente añade al carrito**
+   - Click "Añadir al Carrito"
+   - No pide talla (se asigna 'N/A' internamente)
+   - Item se añade: `{id: X, name: "Gorra...", size: 'N/A', ...}`
+
+6. **Visualización en carrito**
+   - Nombre del producto
+   - **NO muestra "Talla X"**
+   - Precio, cantidad, botones +/- normal
+
+### Compatibilidad
+
+#### Productos Existentes
+- Productos de otras categorías mantienen funcionalidad completa de tallas
+- No hay cambios en camisetas, pantalones, sudaderas, chaquetas
+
+#### Migración de Datos
+- No requiere migración de base de datos
+- Campo `category_id` existente se usa para detección
+- Campo `stock` existente se usa para accesorios
+
+### Validaciones
+
+**Frontend:**
+- Si NO es accesorio + NO tiene talla → alerta "Por favor, selecciona una talla"
+- Si es accesorio → omite validación de talla
+
+**Backend:**
+- Accesorios reciben `sizes: []` (array vacío)
+- No se crean registros en tabla `product_sizes`
+- Stock se maneja únicamente desde campo `product.stock`
+
+### Archivos Modificados v1.0.7
+
+**Frontend - Tienda:**
+- `frontend/JS/app.js:341` - Detección de accesorios
+- `frontend/JS/app.js:383-417` - Ocultar selector de tallas con condición
+- `frontend/JS/app.js:483-503` - Lógica addToCartWithSize sin talla
+- `frontend/JS/app.js:745` - Display condicional de talla en carrito
+
+**Frontend - Admin:**
+- `frontend/JS/admin.js:345-368` - IDs añadidos a grupos de stock
+- `frontend/JS/admin.js:397-450` - Función toggleSizeInputs() + event listeners
+- `frontend/JS/admin.js:465-493` - Lógica condicional en saveProduct()
+
+### Casos de Uso
+
+**Accesorios típicos:**
+- Gorras / Sombreros
+- Mochilas / Bolsos
+- Cinturones (talla única)
+- Carteras / Billeteras
+- Gafas de sol
+- Calcetines (pack único)
+- Joyería / Accesorios
+
+**Nota**: Si un accesorio SÍ requiere tallas (ej: guantes, calcetines por talla), se debe categorizar en otra categoría o crear una nueva.
 
 ---
 
