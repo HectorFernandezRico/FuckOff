@@ -1,6 +1,6 @@
 # FVCKOFF - E-commerce Streetwear
 
-Tienda online de streetwear premium con backend Laravel 11 y frontend vanilla JavaScript.
+Tienda online de streetwear premium con backend Laravel 11 y frontend JavaScript.
 
 ## Requisitos
 
@@ -15,12 +15,17 @@ Tienda online de streetwear premium con backend Laravel 11 y frontend vanilla Ja
    cd FuckOff
    ```
 
-2. Levantar los contenedores
+2. Dirigirse a la carpeta
+   ```bash
+   cd FuckOff
+   ```
+
+3. Levantar los contenedores
    ```bash
    docker-compose up -d
    ```
 
-3. Inicializar la base de datos
+4. Inicializar la base de datos
    ```bash
    docker exec tienda_backend php artisan migrate:fresh --seed
    ```
@@ -43,9 +48,9 @@ Tienda online de streetwear premium con backend Laravel 11 y frontend vanilla Ja
 ## Tecnologías
 
 - **Backend**: Laravel 11, PHP 8.2, MySQL 8.0, Sanctum
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Frontend**: HTML5, CSS3, JavaScript
 - **DevOps**: Docker, Docker Compose
 
 ## Autor
 
-Héctor - Trabajo Final de Grado
+Héctor Fernández Rico - Trabajo Final de Grado (TFG)
