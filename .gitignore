@@ -1,6 +1,3 @@
-# Claude Code configuration
-.claude/
-
 # IDE
 .vscode/
 .idea/
