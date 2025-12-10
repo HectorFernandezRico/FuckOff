@@ -9,12 +9,21 @@ Tienda online de streetwear premium con backend Laravel 11 y frontend vanilla Ja
 
 ## Instalación
 
-```bash
-git clone https://github.com/HectorFernandezRico/FuckOff.git
-cd FuckOff
-docker-compose up -d
-docker exec tienda_backend php artisan migrate:fresh --seed
-```
+1. Clonar el repositorio
+   ```bash
+   git clone https://github.com/HectorFernandezRico/FuckOff.git
+   cd FuckOff
+   ```
+
+2. Levantar los contenedores
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Inicializar la base de datos
+   ```bash
+   docker exec tienda_backend php artisan migrate:fresh --seed
+   ```
 
 ## Acceso
 
@@ -36,19 +45,6 @@ docker exec tienda_backend php artisan migrate:fresh --seed
 - **Backend**: Laravel 11, PHP 8.2, MySQL 8.0, Sanctum
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **DevOps**: Docker, Docker Compose
-
-## Comandos Útiles
-
-```bash
-# Resetear base de datos
-docker exec tienda_backend php artisan migrate:fresh --seed
-
-# Ver logs
-docker logs tienda_backend --tail 50
-
-# Limpiar cachés
-docker exec tienda_backend php artisan optimize:clear
-```
 
 ## Autor
 
