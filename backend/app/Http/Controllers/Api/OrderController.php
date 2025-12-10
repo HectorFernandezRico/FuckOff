@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductSize;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 
@@ -40,6 +42,7 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.size' => 'nullable|string',
             'shipping_address' => 'nullable',
             'status' => 'nullable|string',
         ]);
@@ -59,9 +62,23 @@ class OrderController extends Controller
                     throw new \Exception("El producto {$product->name} no está disponible");
                 }
 
-                // Verificar stock disponible
-                if ($product->stock < $item['quantity']) {
-                    throw new \Exception("Stock insuficiente para el producto: {$product->name}. Disponible: {$product->stock}, Solicitado: {$item['quantity']}");
+                $size = $item['size'] ?? null;
+
+                // Verificar stock disponible (por talla si aplica)
+                if ($size) {
+                    $productSize = ProductSize::where('product_id', $product->id)
+                        ->where('size', $size)
+                        ->first();
+
+                    if (!$productSize || $productSize->stock < $item['quantity']) {
+                        $available = $productSize ? $productSize->stock : 0;
+                        throw new \Exception("Stock insuficiente para {$product->name} (talla {$size}). Disponible: {$available}, Solicitado: {$item['quantity']}");
+                    }
+                } else {
+                    // Producto sin talla (accesorios) - usar stock general
+                    if ($product->stock < $item['quantity']) {
+                        throw new \Exception("Stock insuficiente para el producto: {$product->name}. Disponible: {$product->stock}, Solicitado: {$item['quantity']}");
+                    }
                 }
 
                 $unitPrice = $product->price; // Precio YA incluye IVA
@@ -74,11 +91,19 @@ class OrderController extends Controller
                     'quantity' => $item['quantity'],
                     'unit_price' => $unitPrice,
                     'total_price' => $itemTotal,
+                    'size' => $size,
                 ];
 
                 // REDUCIR STOCK
-                $product->stock -= $item['quantity'];
-                $product->save();
+                if ($size) {
+                    // Reducir stock de la talla específica
+                    $productSize->stock -= $item['quantity'];
+                    $productSize->save();
+                } else {
+                    // Reducir stock general (accesorios)
+                    $product->stock -= $item['quantity'];
+                    $product->save();
+                }
             }
 
             // Extraer IVA del total (precio ya incluye IVA)
@@ -146,13 +171,24 @@ class OrderController extends Controller
                     ->where('order_id', $order->id)
                     ->get();
 
-                // Restaurar stock de cada producto + 1 unidad adicional por cancelación
+                // Restaurar stock de cada producto (por talla si aplica)
                 foreach ($orderItems as $item) {
-                    $product = Product::find($item->product_id);
-                    if ($product) {
-                        // Restaurar la cantidad original + 1 unidad adicional
-                        $product->stock += ($item->quantity + 1);
-                        $product->save();
+                    if ($item->size) {
+                        // Restaurar stock de la talla específica
+                        $productSize = ProductSize::where('product_id', $item->product_id)
+                            ->where('size', $item->size)
+                            ->first();
+                        if ($productSize) {
+                            $productSize->stock += $item->quantity;
+                            $productSize->save();
+                        }
+                    } else {
+                        // Restaurar stock general (accesorios)
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->stock += $item->quantity;
+                            $product->save();
+                        }
                     }
                 }
 
@@ -191,12 +227,24 @@ class OrderController extends Controller
                     ->where('order_id', $order->id)
                     ->get();
 
-                // Restaurar stock de cada producto
+                // Restaurar stock de cada producto (por talla si aplica)
                 foreach ($orderItems as $item) {
-                    $product = Product::find($item->product_id);
-                    if ($product) {
-                        $product->stock += $item->quantity;
-                        $product->save();
+                    if ($item->size) {
+                        // Restaurar stock de la talla específica
+                        $productSize = ProductSize::where('product_id', $item->product_id)
+                            ->where('size', $item->size)
+                            ->first();
+                        if ($productSize) {
+                            $productSize->stock += $item->quantity;
+                            $productSize->save();
+                        }
+                    } else {
+                        // Restaurar stock general (accesorios)
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->stock += $item->quantity;
+                            $product->save();
+                        }
                     }
                 }
             }

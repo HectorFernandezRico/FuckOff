@@ -1371,10 +1371,42 @@ docker exec tienda_backend composer dump-autoload
 ## 📞 Información de Contacto
 
 **Proyecto**: FVCKOFF E-commerce
-**Versión**: 1.0.7
-**Fecha**: Noviembre 2025
+**Versión**: 1.0.9
+**Fecha**: Diciembre 2025
 **Stack**: Laravel 11 + Vanilla JS + Docker
-**Última Actualización**: 29/11/2025
+**Última Actualización**: 09/12/2025
+
+### 🆕 Cambios en v1.0.9 (09/12/2025)
+- ✅ **Checkout - Accesorios sin stock**: Corregido error al comprar accesorios que mostraba "stock insuficiente"
+  - Frontend `checkout.js`: La talla 'N/A' de accesorios ahora se convierte a `null` antes de enviar al backend
+  - El backend ya manejaba correctamente `size: null` para usar stock general
+- ✅ **Carrito - Soporte completo para accesorios**: Corregido error al eliminar/actualizar accesorios del carrito
+  - Backend `CartController.php`: Añadido 'N/A' como talla válida en todas las validaciones
+  - Métodos afectados: `store()`, `update()`, `destroy()`, `sync()`
+- ✅ **UI - Overlay del carrito**: Corregido bug donde la página quedaba opaca al cerrar carrito vacío
+  - `app.js`: Función `toggleCart()` ahora usa lógica explícita con `add/remove` en vez de `toggle`
+  - `app.js`: Listener del overlay ahora cierra explícitamente cada elemento antes de quitar el overlay
+  - Se evita conflicto entre overlay del carrito y modal de producto
+- ✅ **Navegación - Botones "Volver" en login**: Ahora llevan a la página principal en vez de `history.back()`
+  - `login.html`: Ambos botones (login y registro) redirigen a `/HTML/index.html`
+- ✅ **Footer - Enlaces corregidos**: Arreglados enlaces rotos en `about.html`
+  - Envíos, Devoluciones, Contacto, Privacidad, Términos y Cookies ahora apuntan a las páginas correctas
+
+### 🆕 Cambios en v1.0.8 (05/12/2025)
+- ✅ **Checkout corregido - Vaciado de carrito**: Al completar una compra ahora se vacía correctamente el carrito
+  - Frontend: Llamada a `DELETE /api/cart` después de crear la orden exitosamente
+  - El carrito se elimina tanto de localStorage como de la base de datos
+- ✅ **Checkout corregido - Reducción de stock por talla**: El stock ahora se reduce correctamente de `product_sizes`
+  - Frontend: Envío de la talla (`size`) en cada item del pedido al backend
+  - Backend: Reducción del stock en la tabla `product_sizes` para productos con talla
+  - Backend: Reducción del stock general en `products` para accesorios sin talla
+- ✅ **Restauración de stock mejorada**: Al cancelar o eliminar una orden, el stock se restaura correctamente por talla
+  - Método `update()`: Restaura stock a `product_sizes` cuando se cancela una orden
+  - Método `destroy()`: Restaura stock a `product_sizes` cuando se elimina una orden
+- ✅ **Nueva migración**: Añadida columna `size` a la tabla `order_items` para registrar la talla comprada
+- ✅ **Panel Admin - Conteo de productos por categoría**: Corregido el conteo que siempre mostraba 0
+  - Los productos ahora se cargan al iniciar el panel admin antes de renderizar las categorías
+  - Función `getProductCountByCategory()` ahora funciona correctamente
 
 ### 🆕 Cambios en v1.0.7 (29/11/2025)
 - ✅ **Sistema de Accesorios sin Tallas**: Implementación completa de productos sin selector de tallas

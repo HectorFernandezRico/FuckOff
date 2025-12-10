@@ -45,9 +45,18 @@ function initEventListeners() {
     userBtn.addEventListener('click', toggleUserMenu);
     closeCart.addEventListener('click', toggleCart);
     overlay.addEventListener('click', () => {
-        toggleCart();
-        closeProductModal();
+        // Cerrar carrito si está abierto
+        if (cartSidebar.classList.contains('active')) {
+            cartSidebar.classList.remove('active');
+        }
+        // Cerrar modal de producto si está abierto
+        if (productModal.classList.contains('active')) {
+            productModal.classList.remove('active');
+        }
+        // Cerrar menú de usuario
         closeUserMenu();
+        // Siempre quitar overlay al hacer click en él
+        overlay.classList.remove('active');
     });
     sortSelect.addEventListener('change', handleSort);
 
@@ -770,8 +779,20 @@ function updateCartUI() {
 }
 
 function toggleCart() {
-    cartSidebar.classList.toggle('active');
-    overlay.classList.toggle('active');
+    const isOpen = cartSidebar.classList.contains('active');
+
+    if (isOpen) {
+        // Cerrar carrito
+        cartSidebar.classList.remove('active');
+        // Solo quitar overlay si no hay modal de producto abierto
+        if (!productModal.classList.contains('active')) {
+            overlay.classList.remove('active');
+        }
+    } else {
+        // Abrir carrito
+        cartSidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
 }
 
 // Filter & Sort Functions

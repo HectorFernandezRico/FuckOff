@@ -49,7 +49,7 @@ class CartController extends Controller
 
         $data = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'size' => 'required|string|in:XS,S,M,L,XL,XXL',
+            'size' => 'required|string|in:XS,S,M,L,XL,XXL,N/A',
             'quantity' => 'required|integer|min:1',
         ]);
 
@@ -113,7 +113,7 @@ class CartController extends Controller
         $userId = $request->user()->id;
 
         $data = $request->validate([
-            'size' => 'required|string|in:XS,S,M,L,XL,XXL',
+            'size' => 'required|string|in:XS,S,M,L,XL,XXL,N/A',
             'quantity' => 'required|integer|min:1',
         ]);
 
@@ -154,7 +154,7 @@ class CartController extends Controller
         $userId = $request->user()->id;
 
         $data = $request->validate([
-            'size' => 'required|string|in:XS,S,M,L,XL,XXL',
+            'size' => 'required|string|in:XS,S,M,L,XL,XXL,N/A',
         ]);
 
         $cartItem = CartItem::where('user_id', $userId)
@@ -185,7 +185,7 @@ class CartController extends Controller
         $data = $request->validate([
             'items' => 'required|array',
             'items.*.id' => 'required|exists:products,id',
-            'items.*.size' => 'required|string|in:XS,S,M,L,XL,XXL',
+            'items.*.size' => 'required|string|in:XS,S,M,L,XL,XXL,N/A',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 

@@ -184,7 +184,9 @@ async function handleCompleteOrder() {
             user_id: JSON.parse(localStorage.getItem('user')).id,
             items: cart.map(item => ({
                 product_id: item.id,
-                quantity: item.quantity
+                quantity: item.quantity,
+                // Accesorios usan 'N/A' internamente, enviar null al backend
+                size: (item.size && item.size !== 'N/A') ? item.size : null
             })),
             shipping_address: {
                 fullName,
@@ -214,8 +216,21 @@ async function handleCompleteOrder() {
             throw new Error(data.message || 'Error al procesar el pedido');
         }
 
-        // Clear cart
+        // Clear cart from localStorage
         localStorage.removeItem('cart');
+
+        // Clear cart from database (for authenticated users)
+        try {
+            await fetch(`${API_BASE_URL}/cart`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        } catch (e) {
+            console.error('Error clearing cart from DB:', e);
+        }
 
         // Show success message
         alert('¡Pedido realizado con éxito! Recibirás un email de confirmación.');

@@ -18,9 +18,10 @@ const closeAdminModal = document.getElementById('closeAdminModal');
 const adminModalBody = document.getElementById('adminModalBody');
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     checkAuth();
     initEventListeners();
+    await loadProducts(); // Cargar productos primero para el conteo en categorías
     loadCategories();
 });
 
