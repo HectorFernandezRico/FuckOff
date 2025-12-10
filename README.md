@@ -12,7 +12,6 @@ Tienda online de streetwear premium con backend Laravel 11 y frontend JavaScript
 1. Clonar el repositorio
    ```bash
    git clone https://github.com/HectorFernandezRico/FuckOff.git
-   cd FuckOff
    ```
 
 2. Dirigirse a la carpeta
