@@ -81,7 +81,7 @@ function initEventListeners() {
 
             // If admin, go to admin panel
             if (user.role === 'admin') {
-                window.location.href = '/HTML/admin.html';
+                window.location.href = '/admin';
             } else {
                 alert('Funcionalidad de perfil próximamente');
             }
@@ -170,10 +170,10 @@ function handleCheckout() {
 
     if (!token) {
         // User not logged in - redirect to login with return URL
-        window.location.href = '/HTML/login.html?return=' + encodeURIComponent('/HTML/checkout.html');
+        window.location.href = '/login?return=' + encodeURIComponent('/checkout');
     } else {
         // User logged in - go to checkout
-        window.location.href = '/HTML/checkout.html';
+        window.location.href = '/checkout';
     }
 }
 

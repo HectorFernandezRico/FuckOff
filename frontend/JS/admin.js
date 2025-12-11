@@ -31,7 +31,7 @@ function checkAuth() {
 
     if (!authToken) {
         alert('Debes iniciar sesión para acceder al panel de administración.');
-        window.location.href = '/HTML/login.html';
+        window.location.href = '/login';
         return;
     }
 
@@ -39,7 +39,7 @@ function checkAuth() {
         alert('Acceso denegado. Solo administradores pueden acceder a este panel.');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
-        window.location.href = '/HTML/index.html';
+        window.location.href = '/FVCKOFF';
         return;
     }
 }
@@ -50,7 +50,7 @@ async function handleApiError(response) {
         alert('Sesión expirada. Por favor, inicia sesión nuevamente.');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
-        window.location.href = '/HTML/login.html';
+        window.location.href = '/login';
         return;
     }
 
@@ -58,7 +58,7 @@ async function handleApiError(response) {
         alert('No tienes permisos de administrador. Acceso denegado.');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
-        window.location.href = '/HTML/index.html';
+        window.location.href = '/FVCKOFF';
         return;
     }
 
@@ -914,6 +914,6 @@ async function logout() {
     } finally {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
-        window.location.href = '/HTML/login.html';
+        window.location.href = '/login';
     }
 }

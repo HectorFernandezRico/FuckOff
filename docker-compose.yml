@@ -51,10 +51,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./frontend:/app
-    environment:
-      - CHOKIDAR_USEPOLLING=1    # importante en Windows para detectar cambios
-    command: ["live-server", "/app", "--host=0.0.0.0", "--port=8080", "--watch=.", "--no-browser", "--entry-file=HTML/index.html"]
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 # ...existing code...
 
   # Servicio opcional para ejecutar comandos de Laravel (Composer, Artisan) sin hot reload.

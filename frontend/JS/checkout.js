@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user is logged in
     const token = localStorage.getItem('auth_token');
     if (!token) {
-        window.location.href = '/HTML/login.html?return=' + encodeURIComponent(window.location.href);
+        window.location.href = '/login?return=' + encodeURIComponent(window.location.href);
         return;
     }
 
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cart = JSON.parse(localStorage.getItem('cart')) || [];
 
     if (cart.length === 0) {
-        window.location.href = '/HTML/index.html';
+        window.location.href = '/FVCKOFF';
         return;
     }
 
@@ -236,7 +236,7 @@ async function handleCompleteOrder() {
         alert('¡Pedido realizado con éxito! Recibirás un email de confirmación.');
 
         // Redirect to home
-        window.location.href = '/HTML/index.html';
+        window.location.href = '/FVCKOFF';
 
     } catch (error) {
         alert('Error al procesar el pedido: ' + error.message);

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (token) {
         // Redirect to home if already logged in
         const returnUrl = new URLSearchParams(window.location.search).get('return');
-        window.location.href = returnUrl || '/HTML/index.html';
+        window.location.href = returnUrl || '/FVCKOFF';
     }
 
     // Check if register parameter is set
@@ -101,10 +101,10 @@ async function handleLogin(e) {
 
         if (data.user.role === 'admin') {
             // Admin users go to admin panel
-            window.location.href = '/HTML/admin.html';
+            window.location.href = '/admin';
         } else {
             // Regular users go to return URL or home
-            window.location.href = returnUrl || '/HTML/index.html';
+            window.location.href = returnUrl || '/FVCKOFF';
         }
 
     } catch (error) {
@@ -187,10 +187,10 @@ async function handleRegister(e) {
 
         if (data.user.role === 'admin') {
             // Admin users go to admin panel
-            window.location.href = '/HTML/admin.html';
+            window.location.href = '/admin';
         } else {
             // Regular users go to return URL or home
-            window.location.href = returnUrl || '/HTML/index.html';
+            window.location.href = returnUrl || '/FVCKOFF';
         }
 
     } catch (error) {
