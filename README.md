@@ -52,4 +52,4 @@ Tienda online de streetwear premium con backend Laravel 11 y frontend JavaScript
 
 ## Autor
 
-Héctor Fernández Rico - Trabajo Final de Grado (TFG)
+Héctor Fernández Rico & Enrque Aarón Uribe Arai - Trabajo Final de Grado (TFG)
